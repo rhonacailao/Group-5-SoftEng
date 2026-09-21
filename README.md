@@ -10,8 +10,3 @@ This is the designated roles for each of the members in GROUP 5 of Software Engi
 | DevSecOps ENGINEER  | IBUIG, KARLA MAE |
 | TEST ENGINEER  | BALAJADIA, IAN CARLO  |
 
-link: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-
-Hi :)
-Yes!
-Huzzah
