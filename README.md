@@ -1,6 +1,6 @@
 # Group 5
 ## Members:
-- Scrum master:
+- Scrum master: Rhona Angelica Cailao
 - UI/UX developer: Beatriz Marie Bautista
 - Back end developer:
 - DevSecOps Engineer:
