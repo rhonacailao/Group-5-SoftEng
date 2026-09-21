@@ -4,4 +4,4 @@
 - UI/UX developer: Beatriz Marie Bautista
 - Back end developer:
 - DevSecOps Engineer:
-- Test Engineer: Karla Mae Ibuig
+- Test Engineer:
