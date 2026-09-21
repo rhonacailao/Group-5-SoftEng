@@ -5,8 +5,6 @@ This is the designated roles for each of the members in GROUP 5 of Software Engi
 | ROLES  | MEMBERS |
 | ------------- | ------------- |
 | SCRUM MASTER  | CAILAO, RHONA ANGELICA  |
-| UI/UZ DEVELOPER  | BAUTISTA, BEATRIZ MARIE  |
-| SCRUM MASTER  | CAILAO, RHONA ANGELICA  |
 | UI/UX DEVELOPER  | BAUTISTA, BEATRIZ MARIE  |
 | BACKEND DEVELOPER  | EMNACIN, REB  |
 | DevSecOps ENGINEER  | IBUIG, KARLA MAE |
