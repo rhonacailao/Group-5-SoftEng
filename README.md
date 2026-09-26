@@ -1,5 +1,5 @@
 # GROUP 5 [ Software Engineering]
-This is the designated roles for each of the members in GROUP 5 of Software Engineering
+This is the designated roles for each of the members in GROUP 5 of Software Engineering :)
 
 ## DESIGNATION
 | ROLES  | MEMBERS |
