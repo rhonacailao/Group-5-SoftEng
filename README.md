@@ -1,5 +1,5 @@
 # GROUP 5 [ Software Engineering]
-This is the designated roles for each of the members in GROUP 5 of Software Engineering
+This is the designated roles for each of the members in GROUP 5 of Software Engineering :)
 
 ## DESIGNATION
 | ROLES  | MEMBERS |
@@ -9,3 +9,4 @@ This is the designated roles for each of the members in GROUP 5 of Software Engi
 | BACKEND DEVELOPER  | EMNACIN, REB  |
 | DevSecOps ENGINEER  | IBUIG, KARLA MAE |
 | TEST ENGINEER  | BALAJADIA, IAN CARLO  |
+
