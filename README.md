@@ -10,4 +10,9 @@ This is the designated roles for each of the members in GROUP 5 of Software Engi
 | DevSecOps ENGINEER  | IBUIG, KARLA MAE |
 | TEST ENGINEER  | BALAJADIA, IAN CARLO  |
 
+<<<<<<< Updated upstream
 I created a pull request from vscode and is now sending it to here
+=======
+I created a pull request from vscode and is now sending it to here
+
+>>>>>>> Stashed changes
