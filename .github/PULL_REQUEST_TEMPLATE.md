@@ -3,7 +3,8 @@ Briefly describe the changes introduced in this PR and why they were made.
 
 ## Related Issue / Task ID
 - **Task ID:** (e.g., S1-DEV-01)
-- **Closes:** #(issue number)
+- **Assigned Team Member:** #(issue number)
+- **Role:** 
 
 ## Type of Change
 - [ ] New feature / Sprint task

@@ -7,8 +7,9 @@ assignees: ''
 ---
 
 ## Task Details
-- **Task ID (from Sprint Plan):** (e.g., S1-DEV-01)
+- **Task ID (from Sprint Plan):**
 - **Assigned Team Member:** 
+- **Role:**
 
 ## Description
 Provide a clear description of what needs to be built, fixed, or delivered for this task.
