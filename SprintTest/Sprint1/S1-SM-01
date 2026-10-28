@@ -10,14 +10,14 @@ Objective: Establish core repository governance, enforce code review workflows, 
 
 Verified and tested by: Ian Carlo A. Balajadia
 
-Test Case ID: TC-01
+Test Case ID: TC-SM-01
 Test Description: Attempt direct push to main branch.
 (CodeSCR/TC-GOV-01.png)
 Expected Result: Push is rejected by repository rules, requiring a pull request.
 Actual Result: Push declined with repository rule violation (GH013: Changes must be made through a pull request)
 Status: PASS ✅
 
-Test Case ID: TC-02
+Test Case ID: TC-SM-02
 Test Component: Repository Governance / Pull Request Template
 Test Description: Verify that opening a new pull request automatically pre-loads the standardized team PR template in the description box.
 (CodeSCR/TC-GOV-02.png)
@@ -29,7 +29,7 @@ Expected Result: The PR description editor automatically populates with the grou
 Actual Result: The standardized PR template sections loaded instantly upon initiating the pull request.
 Status: PASS ✅
 
-Test Case ID: TC-03
+Test Case ID: TC-SM-03
 Test Component: Repository Governance / Issue Templates (S1-SM-01)
 Test Description: Verify that structured templates are available when creating a new GitHub issue.
 (CodeSCR/TC-GOV-03.png)

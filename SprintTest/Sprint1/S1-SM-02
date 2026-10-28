@@ -1,0 +1,24 @@
+This document outlines the testing strategy, scope, and acceptance criteria for Sprint 1 Software Engineering project, 
+focusing on repository governance, project scaffolding, database connections, 
+and base table migrations.
+
+Test Case ID: TC-SM-04
+Test Component: Agile Sprint Board & Backlog Setup
+Test Description: Verify that the GitHub/Project management board is initialized with Sprint 1 columns (To Do, In Progress, Done) and user stories.
+Expected Result: Project board is active and populated with Sprint 1 user stories mapped to responsible team members.
+Status: PASS ✅
+
+Test Case ID: TC-SM-05
+Test Component: User Stories & Acceptance Criteria Definition
+Test Description: Verify that user stories include detailed, testable acceptance criteria aligning with project requirements.
+Expected Result: All Sprint 1 backlog items contain explicit user story definitions and verification boundaries.
+Status: PASS ✅
+
+Test Case ID: TC-SM-06
+Test Component: Guide Mapping
+Test Description: Verify that the project backlog maps out the core team guides and deliverables.
+Expected Result: Deliverables align correctly across project tracks (Scrum, Development, DB Admin, UI/UX, and Testing).
+Status: PASS ✅
+
+
+

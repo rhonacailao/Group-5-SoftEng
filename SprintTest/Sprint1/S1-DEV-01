@@ -42,3 +42,15 @@ Test Steps:
 Expected Result: The application successfully reads variables from the environment file without throwing configuration or missing secret errors during startup.
 Actual Result: Environment configuration templates were present in both modules, and local .env files were successfully read by the application servers upon launch.
 Status: PASS ✅
+
+Test Case ID: TC-DEV-04
+Test Component: Database Connection & Pool Configuration
+Test Description: Verify that the backend establishes a connection pool using pg and correctly configures SSL parameters for remote database integration (Supabase).
+(CodeSCR/TC-DEV-04.png)
+Test Steps:
+1.Inspect backend/src/config/db.js for proper pool initialization.
+2.Verify that connection parameters pull securely from environment variables (DATABASE_URL).
+3.Start the backend API server and check for successful initialization.
+Expected Result: The database connection module configures pg.Pool with valid connection strings and SSL handling without throwing syntax or runtime connection errors.
+Actual Result: Code correctly imports pg, initializes a shared connection pool targeting process.env.DATABASE_URL, handles Supabase SSL requirements, and starts the API server successfully.
+Status: PASS ✅
