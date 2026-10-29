@@ -1,11 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import healthRoutes from './routes/health.routes.js';
+import authRoutes from './routes/auth.routes.js'; // new
 
 const app = express();
 
-app.use(cors());          // lets the frontend (port 5173) call this API (port 3000)
-app.use(express.json());  // lets the server read JSON sent by forms (needed for login later)
-app.use('/api/health', healthRoutes); // every route in that file starts with /api/health
+app.use(cors());
+app.use(express.json());
+app.use('/api/health', healthRoutes);
+app.use('/api/auth', authRoutes); // new
 
 export default app;
