@@ -1,0 +1,12 @@
+This document outlines the testing strategy, scope, and acceptance criteria for Sprint 1 Software Engineering project, 
+focusing on repository governance, project scaffolding, database connections, 
+and base table migrations.
+
+Test Case ID: TC-SM-01
+Test Component: Database Instance & Environment Initialization
+Test Description: Verify that the primary PostgreSQL/Supabase database instance is successfully provisioned, accessible, and correctly linked via environment configuration variables (DATABASE_URL).
+Test Steps:
+1.Inspect the backend environment template (.env.example) and local .env configuration to ensure database credentials are defined.
+2.Initiate a connection test from the backend database utility module (db.js).
+3.Verify that connection parameters resolve correctly without authentication rejections.
+Expected Result: The database instance accepts incoming connections from the backend application pool (pg.Pool) without timeout or handshake errors.

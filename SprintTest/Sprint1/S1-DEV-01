@@ -1,0 +1,56 @@
+This document outlines the testing strategy, scope, and acceptance criteria for Sprint 1 Software Engineering project, 
+focusing on repository governance, project scaffolding, database connections, 
+and base table migrations.
+
+Task ID: S1-DEV-01
+Task Name: Project scaffold: app skeleton, env config, DB connection
+Assigned Team Member: Reb Emnacin(Developer)
+Sprint / Week: Sprint 1 / Week 1
+Objective: Establish the foundational project architecture, application skeleton, environment configuration files, and backend-to-database connection handshake.
+
+Verified and tested by: Ian Carlo A. Balajadia
+
+Test case: TC-DEV-01
+Test description: App Skeleton & Directory Structure
+(CodeSCR/TC-DEV-01.png)
+Acceptance Criteria: The project repository must have a clean, 
+organized folder structure (e.g., separating frontend, backend, or config files) and all required project 
+dependencies must be listed in package configuration files (like package.json or equivalent).
+Actual Result: 176 packages installed with 0 vulnerabilities, and Vite dev server launched successfully on http://localhost:5173/
+Status: PASS ✅
+
+Test Case ID: TC-DEV-02
+Test Component: Backend App Skeleton & Server Startup
+Test Description: Verify that backend dependencies install cleanly and the server successfully launches locally
+(CodeSCR/TC-DEV-02.png)
+Test Steps:
+1.Navigate to the backend directory.
+2.Run npm install to fetch backend packages.
+3.Run npm run dev to start the API server.
+Expected Result: Packages install without vulnerabilities and the backend API successfully listens on the designated local port.
+Actual Result: 82 packages added with 0 vulnerabilities; API server running successfully on http://localhost:3000
+Status: PASS ✅
+
+Test Case ID: TC-DEV-03
+Test Component: Project Scaffolding / Environment Configuration
+Test Description: Verify that the project provides environment configuration templates (.env.example) and successfully loads local environment variables (.env) for backend/frontend execution.
+(CodeSCR/TC-DEV-03.png)
+Test Steps:
+1.Inspect the project directory (backend / frontend) to check for the presence of an .env.example template file.
+2.Create a local .env file based on the template structure.
+3.Start the application servers and verify they successfully parse and utilize the defined environment variables (such as custom port numbers or database connection strings).
+Expected Result: The application successfully reads variables from the environment file without throwing configuration or missing secret errors during startup.
+Actual Result: Environment configuration templates were present in both modules, and local .env files were successfully read by the application servers upon launch.
+Status: PASS ✅
+
+Test Case ID: TC-DEV-04
+Test Component: Database Connection & Pool Configuration
+Test Description: Verify that the backend establishes a connection pool using pg and correctly configures SSL parameters for remote database integration (Supabase).
+(CodeSCR/TC-DEV-04.png)
+Test Steps:
+1.Inspect backend/src/config/db.js for proper pool initialization.
+2.Verify that connection parameters pull securely from environment variables (DATABASE_URL).
+3.Start the backend API server and check for successful initialization.
+Expected Result: The database connection module configures pg.Pool with valid connection strings and SSL handling without throwing syntax or runtime connection errors.
+Actual Result: Code correctly imports pg, initializes a shared connection pool targeting process.env.DATABASE_URL, handles Supabase SSL requirements, and starts the API server successfully.
+Status: PASS ✅
