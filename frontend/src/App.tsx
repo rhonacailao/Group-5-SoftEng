@@ -9,7 +9,10 @@ import SetPasswordPage from "./pages/SetPasswordPage";
 import DashboardPage from "./pages/DashboardPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import AccountPage from "./pages/AccountPage";
+import UserManagementPage from "./pages/UserManagementPage";
+import SystemSettingsPage from "./pages/SystemSettingsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RoleRoute from "./components/RoleRoute";
 
 function App() {
   return (
@@ -31,6 +34,17 @@ function App() {
           <Route path="/sales" element={<PlaceholderPage title="Sales" />} />
           <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
           <Route path="/account" element={<AccountPage />} />
+
+          {/* Admin and Superadmin */}
+          <Route element={<RoleRoute allow={["admin", "superadmin"]} />}>
+            <Route path="/human-resources" element={<PlaceholderPage title="Human Resources" />} />
+            <Route path="/user-management" element={<UserManagementPage />} />
+          </Route>
+
+          {/* Superadmin only */}
+          <Route element={<RoleRoute allow={["superadmin"]} />}>
+            <Route path="/system-settings" element={<SystemSettingsPage />} />
+          </Route>
         </Route>
       </Route>
 
