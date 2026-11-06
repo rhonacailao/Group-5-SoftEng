@@ -17,7 +17,13 @@ import app from '../../src/app.js';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const migrationsDir = path.resolve(here, '../../../supabase/migrations');
 // Karla's tables first, then the extra pieces login needs
-const migrations = ['20261105110500_userManagement.sql', '20261105130000_password_reset_token.sql', '20261106090000_authSupport.sql'];
+const migrations = [
+  '20261105110500_userManagement.sql',
+  '20261105130000_password_reset_token.sql',
+  '20261105140000_modulesRights.sql',
+  '20261106083000_superadmin_pendingPassword.sql',
+  '20261106090000_authSupport.sql',
+];
 
 export const db = new PGlite();
 let chain = Promise.resolve(); // PGlite runs one thing at a time, so we queue transactions
@@ -65,12 +71,16 @@ export async function startApp() {
 }
 
 // Directly inserts a user (bypasses the API) – used to set up scenarios quickly
-export async function seedUser({ email, role = 'user', status = 'Active', password = 'Passw0rd!x', blocked = false, first = 'Test', last = 'User' }) {
-  const hash = status === 'Active' && password ? await hashPassword(password) : null;
+// Same rule as the database: a user WITHOUT a password must be Pending and blocked
+// (20261106083000_superadmin_pendingPassword.sql); a user with a password is Active.
+export async function seedUser({ email, role = 'user', status, password = 'Passw0rd!x', blocked = false, first = 'Test', last = 'User' }) {
+  const hash = password ? await hashPassword(password) : null;
+  const finalStatus = status ?? (hash ? 'Active' : 'Pending');
+  const finalBlocked = hash ? blocked : true;
   const { rows } = await db.query(
     `INSERT INTO app_user (first_name,last_name,username,email,role_id,status,is_blocked,password_hash,stamp)
-     VALUES ($1,$2,$3,$3,(SELECT role_id FROM "role" WHERE role_name=$4),$5,$6,$7,'test') RETURNING user_id`,
-    [first, last, email, role, status, blocked, hash],
+     VALUES ($1,$2,$3,$3,(SELECT role_id FROM "role" WHERE lower(role_name)=$4),$5,$6,$7,'test') RETURNING user_id`,
+    [first, last, email, role, finalStatus, finalBlocked, hash],
   );
   return Number(rows[0].user_id);
 }
