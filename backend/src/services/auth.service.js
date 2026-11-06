@@ -3,6 +3,7 @@ import * as users from '../repositories/user.repository.js';
 import * as sessions from '../repositories/session.repository.js';
 import * as tokens from '../repositories/token.repository.js';
 import * as audit from '../repositories/audit.repository.js';
+import * as credentials from './credential.service.js';
 import { HttpError } from '../utils/httpError.js';
 import { checkName, checkEmail } from '../utils/validators.js';
 import { hashPassword, verifyPassword, passwordProblem } from '../utils/password.js';
@@ -85,8 +86,23 @@ export async function logout(token) {
   if (token) await sessions.remove(hashToken(token));
 }
 
-// S1-DEV-03: the page behind the emailed link: "set your first password".
-// (S1-DEV-04 will reuse this same function for "reset a forgotten password".)
+// S1-DEV-04 (step 1): "forgot password". The answer is always the same, whether or not
+// the email exists, so nobody can use this form to find out who has an account.
+// Only active, unblocked users who already have a password get a link (an unapproved
+// or never-activated account has nothing to reset).
+export async function requestPasswordReset(rawEmail) {
+  const email = checkEmail(rawEmail).value;
+  if (!email) return;
+
+  const user = await users.findByEmail(email);
+  if (!user || user.status !== 'Active' || user.isBlocked || !user.hasPassword) return;
+
+  const token = await withTransaction(null, (db) => credentials.createLink(db, user, 'reset_password'));
+  await credentials.emailLink(user, 'reset_password', token);
+}
+
+// S1-DEV-03 + S1-DEV-04 (step 2): the page behind the emailed link. The same function
+// handles "set your first password" and "reset a forgotten password".
 export async function setPasswordWithToken({ token, password }) {
   const problem = passwordProblem(password);
   if (problem) throw new HttpError(400, problem, { errors: { password: problem } });
@@ -112,6 +128,8 @@ export async function setPasswordWithToken({ token, password }) {
       throw new HttpError(403, 'Your account is blocked. Please contact an administrator.', { code: 'ACCOUNT_BLOCKED' });
     }
 
+    // No password yet = this is the first password; otherwise it is a reset
+    const purpose = user.hasPassword ? 'reset_password' : 'set_password';
     await users.setPasswordHash(user.id, await hashPassword(password), db);
     await tokens.markUsed(link.id, db);
     await tokens.cancelAllForUser(user.id, db);  // any other open links stop working
@@ -121,11 +139,11 @@ export async function setPasswordWithToken({ token, password }) {
         tableName: 'app_user',
         action: 'EDIT',
         recordKey: user.id,
-        newValues: { event: link.purpose === 'set_password' ? 'password_set' : 'password_reset' },
+        newValues: { event: purpose === 'set_password' ? 'password_set' : 'password_reset' },
         actor: user,
       },
       db,
     );
-    return { purpose: link.purpose };
+    return { purpose };
   });
 }
