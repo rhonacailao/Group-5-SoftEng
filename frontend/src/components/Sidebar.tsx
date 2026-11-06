@@ -1,4 +1,5 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useAuthStore } from "../store/authStore";
 
 // Font Awesome icons (import the CDN in index.html)
 const links = [
@@ -9,6 +10,14 @@ const links = [
 ];
 
 function Sidebar() {
+  const navigate = useNavigate();
+  const logout = useAuthStore((s) => s.logout);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
+
   return (
     <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col bg-dark text-white shadow">
       <div className="p-8">
@@ -56,16 +65,17 @@ function Sidebar() {
           <i className="fa-solid fa-gear fa-fw" aria-hidden="true" />
           Settings
         </NavLink>
-        <Link
-          to="/login"
-          className="flex items-center gap-3 rounded-md px-4 py-2 hover:bg-dark-grey"
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 rounded-md px-4 py-2 text-left hover:bg-dark-grey"
         >
           <i
             className="fa-solid fa-right-from-bracket fa-fw"
             aria-hidden="true"
           />
           Log out
-        </Link>
+        </button>
       </footer>
     </aside>
   );
