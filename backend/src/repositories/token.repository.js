@@ -43,3 +43,10 @@ export async function cancelAllForUser(userId, db) {
     [userId],
   );
 }
+
+// Has this user ever been sent a link? (A user who registered but was never approved or
+// invited has not, so "resend invite" must not be allowed for them.)
+export async function anyForUser(userId, db = pool) {
+  const { rows } = await db.query('SELECT 1 FROM password_reset_token WHERE user_id = $1 LIMIT 1', [userId]);
+  return rows.length > 0;
+}
