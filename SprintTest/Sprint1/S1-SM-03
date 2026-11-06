@@ -1,0 +1,25 @@
+This document outlines the testing strategy, scope, and acceptance criteria for Sprint 1 Software Engineering project, 
+focusing on repository governance, project scaffolding, database connections, 
+and base table migrations.
+
+Task ID: S1-SM-03
+Task Name: Team working agreement, Definition of Done, role guide
+Assigned Team Member: Rhona Cailao (Scrum Master)
+Sprint / Week: Sprint 1 / Week 1
+Objective: Establish clear team working agreements, a standardized Definition of Done (DoD), and explicit role guides to govern collaboration and quality assurance across the HOPE, Inc. ERP project.
+
+Verified and tested by: Ian Carlo A. Balajadia
+
+Test Case ID: TC-SM-03
+Test Component: Team Working Agreement, Definition of Done, & Role Guide (S1-SM-03)
+Test Description: Verify that the Scrum Master establishes clear team working agreements, 
+a standardized Definition of Done (DoD), and explicit role guides for all members of the HOPE, Inc. ERP project group.
+Test Steps:Inspect project documentation for team collaboration guidelines, communication protocols, and meeting cadences.
+Review the formal Definition of Done (DoD) criteria governing task completion, code reviews, 
+and testing requirements.Validate that role responsibilities are clearly mapped across all 
+team members (Scrum Master, Developer, DB Admin, UI/UX Designer, and Tester).   
+
+Expected Result: Comprehensive governance documents are defined, agreed upon by the team, and integrated into the project repository 
+to guide collaboration and quality assurance.Actual Result: Team working agreement, Definition of Done criteria, and functional 
+role guides successfully established and documented.
+Status: PASS ✅
