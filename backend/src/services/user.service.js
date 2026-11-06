@@ -42,6 +42,7 @@ export async function list(actor, query) {
     status: STATUSES.includes(query.status) ? query.status : undefined,
     role: ROLES.includes(query.role) ? query.role : undefined,
     isBlocked: query.blocked === 'true' ? true : query.blocked === 'false' ? false : undefined,
+    awaitingApproval: query.awaitingApproval === 'true' ? true : undefined, // S1-DEV-06: the approval queue
     hideRole: actor.role === 'admin' ? 'superadmin' : undefined,
     limit: pageSize,
     offset: (page - 1) * pageSize,
@@ -208,4 +209,72 @@ export async function resendInvite(actor, id) {
 
   const emailSent = await credentials.emailLink(result.user, 'set_password', result.token);
   return { emailSent };
+}
+
+// S1-DEV-06: a superadmin approves someone who registered by themselves. Approving sends
+// them the one-time "choose your password" link; choosing it makes the account Active.
+// (Until then they stay Pending, because the database only allows a password-less user to be
+// Pending and blocked.)
+export async function approve(actor, id) {
+  const result = await withTransaction(actor.email, async (db) => {
+    const { target } = await loadTargetLocked(actor, id, db);
+    if (target.hasPassword || target.status !== 'Pending') {
+      throw new HttpError(409, 'This user is already active.');
+    }
+    if (!target.awaitingApproval) {
+      throw new HttpError(409, 'This user was already approved. Use "resend invite" if the link expired.');
+    }
+
+    const token = await credentials.createLink(db, target, 'set_password');
+    await audit.write(
+      {
+        tableName: 'app_user',
+        action: 'EDIT',
+        recordKey: id,
+        oldValues: { approved: false },
+        newValues: { approved: true },
+        actor,
+      },
+      db,
+    );
+    return { user: await users.findById(id, db), token };
+  });
+
+  // Email only after the change is saved
+  const emailSent = await credentials.emailLink(result.user, 'set_password', result.token);
+  return { user: withCanManage(actor, result.user), emailSent };
+}
+
+// S1-DEV-06: designate an admin, or turn an admin back into a plain user. Superadmin accounts
+// are never created here (only by the create-superadmin script), but an existing superadmin
+// may be stepped down, unless they are the last one.
+export async function setRole(actor, id, role) {
+  if (role !== 'admin' && role !== 'user') {
+    throw new HttpError(400, 'Role must be admin or user', { errors: { role: 'Role must be admin or user' } });
+  }
+
+  return withTransaction(actor.email, async (db) => {
+    const { target, activeSuperadmins } = await loadTargetLocked(actor, id, db);
+    if (target.status !== 'Active' || !target.hasPassword) {
+      throw new HttpError(409, 'Only active users can be given a different role.');
+    }
+    if (target.role === role) return withCanManage(actor, target); // nothing to do
+
+    // Stepping a superadmin down removes one, so the same "last superadmin" rule applies
+    assertNotLastSuperadmin(target, activeSuperadmins);
+
+    const updated = await users.setRole(id, role, actor.email, db);
+    await audit.write(
+      {
+        tableName: 'app_user',
+        action: 'EDIT',
+        recordKey: id,
+        oldValues: { role: target.role },
+        newValues: { role: updated.role },
+        actor,
+      },
+      db,
+    );
+    return withCanManage(actor, updated);
+  });
 }
