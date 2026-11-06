@@ -9,6 +9,7 @@ import SetPasswordPage from "./pages/SetPasswordPage";
 import DashboardPage from "./pages/DashboardPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import AccountPage from "./pages/AccountPage";
+import CustomersPage from "./pages/CustomersPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import SystemSettingsPage from "./pages/SystemSettingsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -29,7 +30,7 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/customers" element={<PlaceholderPage title="Customers" />} />
+          <Route path="/customers" element={<CustomersPage />} />
           <Route path="/products" element={<PlaceholderPage title="Products" />} />
           <Route path="/sales" element={<PlaceholderPage title="Sales" />} />
           <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
