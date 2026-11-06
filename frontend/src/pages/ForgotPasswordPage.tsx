@@ -4,14 +4,30 @@ import { Link } from "react-router-dom";
 import AuthSplitLayout from "../components/AuthSplitLayout";
 import TextField from "../components/TextField";
 import Alert from "../components/Alert";
+import { api, errorMessage } from "../lib/api";
 
 function ForgotPasswordPage() {
-  const [email, setEmail] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  // Mockup only: no email is actually sent.
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  // The back end always gives the same answer, whether or not the email exists.
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setEmail(new FormData(e.currentTarget).get("email") as string);
+    const email = new FormData(e.currentTarget).get("email");
+    setMessage(null);
+    setError(null);
+    setBusy(true);
+    try {
+      const res = await api<{ ok: true; message: string }>("/api/auth/forgot-password", {
+        body: { email },
+      });
+      setMessage(res.message);
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -37,24 +53,28 @@ function ForgotPasswordPage() {
           id="email"
           label="Email address"
           type="email"
+          icon="fa-envelope"
           autoComplete="email"
           placeholder="username@example.com"
         />
 
-        {email && (
+        {message && (
           <Alert type="success" title="Check your inbox.">
-            If an account exists for {email}, a reset link is on its way.{" "}
-            <Link to="/set-password" state={{ email }} className="underline">
-              Open the reset link (mockup)
-            </Link>
+            {message}
+          </Alert>
+        )}
+        {error && (
+          <Alert type="error" title="Error!">
+            {error}
           </Alert>
         )}
 
         <button
           type="submit"
-          className="px-4 py-2 bg-fire text-white rounded-md shadow-lg hover:bg-fire-light"
+          disabled={busy}
+          className="px-4 py-2 bg-fire text-white rounded-md shadow-lg hover:bg-fire-light disabled:opacity-60"
         >
-          Send reset link
+          {busy ? "Sending..." : "Send reset link"}
         </button>
       </form>
     </AuthSplitLayout>

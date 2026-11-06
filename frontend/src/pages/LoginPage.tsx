@@ -1,19 +1,35 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AuthSplitLayout from "../components/AuthSplitLayout";
 import TextField from "../components/TextField";
 import GoogleButton from "../components/GoogleButton";
 import OrDivider from "../components/OrDivider";
 import Alert from "../components/Alert";
+import { errorMessage } from "../lib/api";
+import { DEMO_EMAIL, DEMO_ENABLED, DEMO_PASSWORD, useAuthStore } from "../store/authStore";
 
 function LoginPage() {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  const login = useAuthStore((s) => s.login);
 
-  // Mockup only: no authentication is performed.
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoggedIn(true);
+    setError(null);
+    setBusy(true);
+    try {
+      await login(email, password);
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -26,7 +42,7 @@ function LoginPage() {
       }
       description="Enter your email address and password to continue."
       footer={
-        <p>
+        <p className="text-center">
           Don&apos;t have an account?{" "}
           <Link to="/register" className="text-fire underline">
             Register
@@ -39,15 +55,21 @@ function LoginPage() {
           id="email"
           label="Email address"
           type="email"
+          icon="fa-envelope"
           autoComplete="email"
           placeholder="username@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
         <TextField
           id="password"
           label="Password"
           type="password"
+          icon="fa-lock"
           autoComplete="current-password"
           placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
         />
 
         <p className="text-md">
@@ -56,21 +78,28 @@ function LoginPage() {
           </Link>
         </p>
 
-        {loggedIn && (
-          <Alert type="success" title="Success!">
-            You are logged in (mockup).
+        {error && (
+          <Alert type="error" title="Error!">
+            {error}
           </Alert>
         )}
 
         <button
           type="submit"
-          className="px-4 py-2 bg-fire text-white rounded-md shadow-lg hover:bg-fire-light"
+          disabled={busy}
+          className="px-4 py-2 bg-fire text-white rounded-md shadow-lg hover:bg-fire-light disabled:opacity-60"
         >
-          Log in
+          {busy ? "Logging in..." : "Log in"}
         </button>
 
         <OrDivider />
         <GoogleButton />
+
+        {DEMO_ENABLED && (
+          <p className="text-center text-sm text-dark-grey">
+            Demo account: <b>{DEMO_EMAIL}</b> / <b>{DEMO_PASSWORD}</b>
+          </p>
+        )}
       </form>
     </AuthSplitLayout>
   );
