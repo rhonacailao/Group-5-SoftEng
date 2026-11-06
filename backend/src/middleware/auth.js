@@ -20,3 +20,12 @@ export async function requireAuth(req, res, next) {
   req.user = user;
   next();
 }
+
+// Only these roles may continue. Use it AFTER requireAuth:
+//   router.use(requireAuth, requireRole('admin', 'superadmin'))
+export function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!roles.includes(req.user?.role)) throw new HttpError(403, 'You do not have access to this.');
+    next();
+  };
+}
