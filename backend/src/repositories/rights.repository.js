@@ -40,15 +40,18 @@ export async function listForUser(userId, db) {
   return new Map(rows.map((row) => [Number(row.right_id), row.is_granted]));
 }
 
-// Just the codes a user holds right now (used by the permission check)
+// The codes a user holds right now (the main page menu uses this). Taken-away rights and
+// rights of an inactive module do not count.
 export async function listGrantedCodes(userId, db = pool) {
   const { rows } = await db.query(
     `SELECT r.right_code
        FROM user_permission up
        JOIN rights r ON r.right_id = up.right_id
+       JOIN module m ON m.module_id = r.module_id
       WHERE up.user_id = $1 AND up.status = 'Active' AND up.deleted_at IS NULL
         AND r.status = 'Active' AND r.deleted_at IS NULL
-      ORDER BY r.right_id`,
+        AND m.status = 'Active' AND m.deleted_at IS NULL
+      ORDER BY m.module_id, r.right_id`,
     [userId],
   );
   return rows.map((row) => row.right_code);
@@ -77,4 +80,23 @@ export async function revoke(userId, rightId, by, db) {
       WHERE user_id = $1 AND right_id = $2`,
     [userId, rightId, `revoke:${by}`.slice(0, 100)],
   );
+}
+
+// S1-DEV-08: the server-side permission check. True when the user holds AT LEAST ONE of
+// these codes right now. One small query, run on every protected request, so taking a right
+// away works immediately (nothing is remembered in the browser or the session).
+export async function userHasAnyRight(userId, codes, db = pool) {
+  const { rows } = await db.query(
+    `SELECT 1
+       FROM user_permission up
+       JOIN rights r ON r.right_id = up.right_id
+       JOIN module m ON m.module_id = r.module_id
+      WHERE up.user_id = $1 AND r.right_code = ANY($2::text[])
+        AND up.status = 'Active' AND up.deleted_at IS NULL
+        AND r.status = 'Active' AND r.deleted_at IS NULL
+        AND m.status = 'Active' AND m.deleted_at IS NULL
+      LIMIT 1`,
+    [userId, codes],
+  );
+  return rows.length > 0;
 }
