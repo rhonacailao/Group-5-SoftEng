@@ -1,26 +1,37 @@
 import "./App.css";
 import { Navigate, Route, Routes } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import AuthLayout from "./layouts/AuthLayout";
+import DashboardLayout from "./layouts/DashboardLayout";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import SetPasswordPage from "./pages/SetPasswordPage";
+import DashboardPage from "./pages/DashboardPage";
+import PlaceholderPage from "./pages/PlaceholderPage";
 
 function App() {
   return (
-    <>
-      <Navbar />
-      <main>
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/set-password" element={<SetPasswordPage />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </main>
-    </>
+    <Routes>
+      {/* Pages with the top navbar */}
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/set-password" element={<SetPasswordPage />} />
+      </Route>
+
+      {/* Pages with the left sidebar (no navbar) */}
+      <Route element={<DashboardLayout />}>
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/customers" element={<PlaceholderPage title="Customers" />} />
+        <Route path="/products" element={<PlaceholderPage title="Products" />} />
+        <Route path="/sales" element={<PlaceholderPage title="Sales" />} />
+        <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+      </Route>
+
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 }
 

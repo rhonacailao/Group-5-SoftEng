@@ -12,6 +12,8 @@
   --color-light-grey: #d6d7d7;
   --color-dark-grey: #4f5d75;
   --color-dark: #212431;
+  --color-cream: #e7e1d7;
+  --color-paper: #f0ece9;
 }
 
 @layer base {
