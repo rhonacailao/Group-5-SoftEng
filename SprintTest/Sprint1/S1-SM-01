@@ -1,0 +1,42 @@
+This document outlines the testing strategy, scope, and acceptance criteria for Sprint 1 Software Engineering project, 
+focusing on repository governance, project scaffolding, database connections, 
+and base table migrations.
+
+Task ID: S1-SM-01
+Task Name: Repo setup: branch protection, PR and issue templates
+Assigned Team Member: Rhona Cailao (Scrum Master)
+Sprint / Week: Sprint 1 / Week 1
+Objective: Establish core repository governance, enforce code review workflows, and standardize issue/PR reporting to maintain code quality across the team.
+
+Verified and tested by: Ian Carlo A. Balajadia
+
+Test Case ID: TC-SM-01
+Test Description: Attempt direct push to main branch.
+(CodeSCR/TC-GOV-01.png)
+Expected Result: Push is rejected by repository rules, requiring a pull request.
+Actual Result: Push declined with repository rule violation (GH013: Changes must be made through a pull request)
+Status: PASS ✅
+
+Test Case ID: TC-SM-02
+Test Component: Repository Governance / Pull Request Template
+Test Description: Verify that opening a new pull request automatically pre-loads the standardized team PR template in the description box.
+(CodeSCR/TC-GOV-02.png)
+Test Steps:
+1.Create and push a feature or test branch (e.g., test/pr-template-verification) to the remote repository.
+2.Navigate to the repository on GitHub and click Compare & pull request.
+3.Observe the pull request description input field.
+Expected Result: The PR description editor automatically populates with the group's standard sections, including Description, Related Issue / Task ID, Type of Change, and the Definition of Done Checklist.
+Actual Result: The standardized PR template sections loaded instantly upon initiating the pull request.
+Status: PASS ✅
+
+Test Case ID: TC-SM-03
+Test Component: Repository Governance / Issue Templates (S1-SM-01)
+Test Description: Verify that structured templates are available when creating a new GitHub issue.
+(CodeSCR/TC-GOV-03.png)
+Test Steps:
+1.Navigate to the repository on GitHub and click the Issues tab.   
+2.Click New issue.   
+3.Observe the issue creation options.  
+Expected Result: Structured template options (e.g., Bug Report, Sprint Task / Feature) are displayed for selection.
+Actual Result: Issue templates successfully loaded with specific options for Bug Reports and Sprint Tasks.
+Status: PASS ✅
