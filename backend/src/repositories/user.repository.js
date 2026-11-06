@@ -16,7 +16,9 @@ import { pool } from '../config/db.js';
 const COLUMNS = `u.user_id, u.first_name, u.last_name, u.email, lower(r.role_name) AS role_name,
                  u.status, u.is_blocked, (u.password_hash IS NOT NULL) AS has_password, u.created_at,
                  EXISTS (SELECT 1 FROM password_reset_token t
-                          WHERE t.user_id = u.user_id AND NOT t.is_used AND t.expires_at > now()) AS has_open_link`;
+                          WHERE t.user_id = u.user_id AND NOT t.is_used AND t.expires_at > now()) AS has_open_link,
+                 (u.status = 'Pending' AND u.password_hash IS NULL
+                  AND NOT EXISTS (SELECT 1 FROM password_reset_token t WHERE t.user_id = u.user_id)) AS awaiting_approval`;
 const FROM = `FROM app_user u JOIN "role" r ON r.role_id = u.role_id`;
 const LIVE = 'u.deleted_at IS NULL';
 
@@ -34,6 +36,7 @@ function toUser(row) {
     isBlocked: row.is_blocked && row.has_password, // a real block
     hasPassword: row.has_password,
     hasOpenLink: row.has_open_link, // an unused, unexpired emailed link exists
+    awaitingApproval: row.awaiting_approval, // registered by themselves; no superadmin has approved yet
     createdAt: row.created_at,
   };
 }
@@ -122,6 +125,18 @@ export async function setBlocked(id, isBlocked, editedBy, db = pool) {
   return findById(id, db);
 }
 
+// S1-DEV-06: designate an admin (or make an admin a plain user again)
+export async function setRole(id, role, editedBy, db = pool) {
+  await db.query(
+    `UPDATE app_user
+        SET role_id = (SELECT role_id FROM "role" WHERE lower(role_name) = $2),
+            stamp = $3, updated_at = now()
+      WHERE user_id = $1`,
+    [id, role, `role:${editedBy}`.slice(0, 100)],
+  );
+  return findById(id, db);
+}
+
 // Superadmins who can currently sign in. Locked, so two people cannot disable the last two
 // superadmins at the same moment (the "last superadmin" guard uses this).
 export async function lockActiveSuperadmins(db) {
@@ -138,7 +153,7 @@ export async function lockActiveSuperadmins(db) {
 
 // Search + filter + paging for the User Management list.
 //   hideRole: leave this role out completely (admins never see superadmins)
-export async function list({ search, status, role, isBlocked, hideRole, limit, offset }, db = pool) {
+export async function list({ search, status, role, isBlocked, awaitingApproval, hideRole, limit, offset }, db = pool) {
   const where = [LIVE];
   const params = [];
   const add = (value) => {
@@ -154,6 +169,10 @@ export async function list({ search, status, role, isBlocked, hideRole, limit, o
   if (role) where.push(`lower(r.role_name) = ${add(role)}`);
   if (typeof isBlocked === 'boolean') {
     where.push(`(u.is_blocked AND u.password_hash IS NOT NULL) = ${add(isBlocked)}`);
+  }
+  if (awaitingApproval === true) {
+    where.push(`(u.status = 'Pending' AND u.password_hash IS NULL
+                 AND NOT EXISTS (SELECT 1 FROM password_reset_token t WHERE t.user_id = u.user_id))`);
   }
   if (hideRole) where.push(`lower(r.role_name) <> ${add(hideRole)}`);
 
