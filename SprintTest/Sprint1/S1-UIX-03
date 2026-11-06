@@ -1,0 +1,18 @@
+
+
+Task ID: S1-UIX-03
+Task Name: Wireframes: main page, User Management list and Rights dialog
+Assigned Team Member: Beatriz Marie Bautista (UI/UX Designer)
+Sprint / Week: Sprint 1 / Week 1
+Objective: Create comprehensive wireframes for the primary dashboard application page, user management listing table, and role/rights assignment modal dialogs.
+
+TC-UIX-03: Main Page & User Management Wireframes
+Test Description: Verify that comprehensive wireframes are created for the primary dashboard application page, 
+user management listing table, and rights assignment modal dialogs.
+Test Steps:
+-Inspect the main landing/dashboard layout wireframes.
+-Review the User Management data table view layout and column configurations.
+-Validate the rights assignment and permission dialog popups for administrative control.
+Expected Result: Complete dashboard and user administration layouts are fully mocked up to guide frontend implementation.
+Status: PASS ✅
+

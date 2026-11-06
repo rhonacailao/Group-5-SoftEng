@@ -1,0 +1,16 @@
+Task ID: S1-DBA-05
+Task Name: Seed data: one superadmin account per team member, modules   
+Assigned Team Member: Karla Mae Ibuig (DB Admin)   
+Sprint / Week: Sprint 1 / Week 1   
+Objective: Populate initial database seed records, 
+including dedicated superadmin accounts for each team member and baseline system modules.
+
+TC-DBA-05: Initial System Seed Data
+Test Description: Verify that seed data scripts successfully populate initial records, 
+including dedicated superadmin accounts for each team member and core system modules.
+Test Steps:
+-Run the database seed data script against the test environment.
+-Query the app_user table to verify that superadmin accounts exist for all team members.
+-Query the module table to verify baseline application modules are loaded.
+Expected Result: Seed records populate accurately without duplicate key violations or constraint errors.
+Status: PASS ✅

@@ -1,0 +1,18 @@
+
+
+Task ID: S1-DBA-03
+Task Name: Migration: app_user (role, blocked flag), role, module, rights catalogue  
+Assigned Team Member: Karla Mae Ibuig (DB Admin)   Sprint / Week: Sprint 1 / Week 1   
+Objective: Execute database migrations to establish the core user account table structure 
+(including roles and blocked status flags), security roles, system modules, and rights catalogue tables.
+
+TC-DBA-03: Core User & Security Tables Migration
+Test Description: Verify that database migration scripts successfully create the app_user table 
+(with role and blocked status flags), security role, module, and rights catalogue tables.
+Test Steps:
+-Run the database migration script for core user and security structures.
+-Inspect the database schema via DBeaver or database tools to confirm the existence of app_user, role, module, and rights tables.
+-Verify foreign key constraints between users, roles, and modules.
+Expected Result: Core security and user tables are established with proper column data types, primary keys, and relational constraints.
+
+Status: PASS ✅

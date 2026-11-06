@@ -1,0 +1,18 @@
+
+
+Task ID: S1-UIX-02
+Task Name: Wireframes: login, register, set/reset password
+Assigned Team Member: Beatriz Marie Bautista (UI/UX Designer)
+Sprint / Week: Sprint 1 / Week 1
+Objective: Design intuitive wireframes for the user authentication workflows, covering login, account registration, and password set/reset screens.
+
+
+TC-UIX-02: Authentication Wireframes
+Test Description: Verify that UI/UX wireframes are designed 
+for the core authentication workflows, covering user login, registration, and set/reset password screens.
+Test Steps:
+-Inspect the design files or prototypes for the login screen layout and form controls.
+-Review the user registration screen design to ensure fields for account creation are present.
+-Validate the presence of set and reset password interface flows within the wireframe suite.
+Expected Result: Clear, accessible wireframes are established for all authentication endpoints, aligning with Module 1 security requirements.
+Status: PASS ✅
