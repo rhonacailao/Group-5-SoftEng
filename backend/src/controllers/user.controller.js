@@ -1,4 +1,5 @@
 import * as userService from '../services/user.service.js';
+import * as rightsService from '../services/rights.service.js';
 import { parseId } from '../utils/validators.js';
 
 export async function list(req, res) {
@@ -38,4 +39,18 @@ export async function setRole(req, res) {
 
 export async function resendInvite(req, res) {
   res.json({ ok: true, ...(await userService.resendInvite(req.user, parseId(req.params.id))) });
+}
+
+// S1-DEV-07: Rights dialog
+export async function getRights(req, res) {
+  res.json({ ok: true, ...(await rightsService.getUserRights(req.user, parseId(req.params.id))) });
+}
+
+export async function setRights(req, res) {
+  const result = await rightsService.setUserRights(req.user, parseId(req.params.id), (req.body ?? {}).rights);
+  res.json({ ok: true, ...result });
+}
+
+export async function catalogue(req, res) {
+  res.json({ ok: true, modules: await rightsService.getCatalogue() });
 }
