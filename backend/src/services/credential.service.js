@@ -19,7 +19,6 @@ export async function createLink(db, user, purpose) {
     {
       userId: user.id,
       tokenHash: hashToken(token),
-      purpose,
       hours: purpose === 'reset_password' ? RESET_HOURS : INVITE_HOURS,
     },
     db,
