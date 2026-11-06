@@ -32,15 +32,15 @@ try {
     let user = existing;
     if (!user) {
       user = await users.insert(
-        { firstName: first.value, lastName: last.value, email: email.value, role: 'superadmin', status: 'Active' },
+        { firstName: first.value, lastName: last.value, email: email.value, role: 'superadmin', status: 'Pending', createdBy: 'create-superadmin' },
         db,
       );
       await audit.write(
         { tableName: 'app_user', action: 'ADD', recordKey: user.id, newValues: { email: user.email, role: 'superadmin' }, actor: { email: 'create-superadmin' } },
         db,
       );
-    } else if (user.role !== 'superadmin' || user.status !== 'Active') {
-      throw new Error(`${user.email} already exists as a ${user.status} ${user.role}. Approve or promote them in the app instead.`);
+    } else if (user.role !== 'superadmin') {
+      throw new Error(`${user.email} already exists as a ${user.role}. Promote them in the app instead.`);
     }
 
     const token = await credentials.createLink(db, user, 'set_password');

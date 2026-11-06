@@ -35,7 +35,7 @@ export async function register(body) {
   try {
     await withTransaction(null, async (db) => {
       const user = await users.insert(
-        { firstName: firstName.value, lastName: lastName.value, email: email.value, role: 'user', status: 'Pending' },
+        { firstName: firstName.value, lastName: lastName.value, email: email.value, role: 'user', status: 'Pending', createdBy: 'register' },
         db,
       );
       await audit.write(
@@ -121,7 +121,10 @@ export async function setPasswordWithToken({ token, password }) {
     }
 
     const user = await users.findByIdForUpdate(link.userId, db);
-    if (!user || user.status !== 'Active') {
+    // A link may belong to an Active user (reset) or to a Pending user who was approved or
+    // invited and has not chosen a password yet (first password). Anyone else: not valid.
+    const waitingForFirstPassword = user && user.status === 'Pending' && !user.hasPassword;
+    if (!user || (user.status !== 'Active' && !waitingForFirstPassword)) {
       throw new HttpError(400, 'This link is not valid.', { code: 'TOKEN_INVALID' });
     }
     if (user.isBlocked) {
@@ -130,7 +133,9 @@ export async function setPasswordWithToken({ token, password }) {
 
     // No password yet = this is the first password; otherwise it is a reset
     const purpose = user.hasPassword ? 'reset_password' : 'set_password';
-    await users.setPasswordHash(user.id, await hashPassword(password), db);
+    const hash = await hashPassword(password);
+    if (user.hasPassword) await users.setPasswordHash(user.id, hash, db);
+    else await users.setFirstPassword(user.id, hash, db); // also makes the account Active
     await tokens.markUsed(link.id, db);
     await tokens.cancelAllForUser(user.id, db);  // any other open links stop working
     await sessions.removeAllForUser(user.id, db); // log the user out everywhere

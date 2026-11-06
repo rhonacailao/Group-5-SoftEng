@@ -14,12 +14,12 @@ describe('S1-DEV-02 register', () => {
   test('creates a pending user with no password', async () => {
     const r = await anon().post('/api/auth/register', { firstName: 'Ana', lastName: 'Cruz', email: 'Ana@Example.com' });
     assert.equal(r.status, 201);
-    const { rows } = await db.query('SELECT u.status, r.role_name AS role_code, u.password_hash, u.email FROM app_user u JOIN "role" r USING (role_id)');
-    assert.deepEqual(rows[0], { status: 'Pending', role_code: 'user', password_hash: null, email: 'ana@example.com' });
+    const { rows } = await db.query('SELECT u.status, lower(r.role_name) AS role_code, u.is_blocked, u.password_hash, u.email FROM app_user u JOIN "role" r USING (role_id)');
+    assert.deepEqual(rows[0], { status: 'Pending', role_code: 'user', is_blocked: true, password_hash: null, email: 'ana@example.com' });
   });
   test('cannot self-assign role/status', async () => {
     await anon().post('/api/auth/register', { firstName: 'A', lastName: 'B', email: 'a@b.co', role: 'superadmin', status: 'Active' });
-    const { rows } = await db.query('SELECT u.status, r.role_name AS role_code FROM app_user u JOIN "role" r USING (role_id)');
+    const { rows } = await db.query('SELECT u.status, lower(r.role_name) AS role_code FROM app_user u JOIN "role" r USING (role_id)');
     assert.deepEqual(rows[0], { status: 'Pending', role_code: 'user' });
   });
   test('duplicate email -> 409, bad input -> 400', async () => {
@@ -54,6 +54,8 @@ describe('S1-DEV-03 set password, login, logout', () => {
     assert.equal((await u.post('/api/auth/set-password', { token, password: 'short' })).status, 400);
     assert.equal((await u.post('/api/auth/set-password', { token, password: 'GoodPass123' })).status, 200);
     assert.equal((await u.post('/api/auth/set-password', { token, password: 'GoodPass123' })).status, 400, 'link works once');
+    const { rows } = await db.query("SELECT status, is_blocked FROM app_user WHERE email='p@x.co'");
+    assert.deepEqual(rows[0], { status: 'Active', is_blocked: false }, 'first password activates the account');
     assert.equal((await u.login('p@x.co', 'GoodPass123')).status, 200);
     assert.equal((await u.get('/api/auth/me')).body.user.email, 'p@x.co');
     assert.equal((await u.post('/api/auth/logout')).status, 200);

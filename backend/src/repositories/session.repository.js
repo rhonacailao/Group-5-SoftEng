@@ -11,7 +11,7 @@ export async function create({ tokenHash, userId, hours }, db = pool) {
 // Finds who a cookie belongs to. Expired sessions are ignored.
 export async function findUserByTokenHash(tokenHash, db = pool) {
   const { rows } = await db.query(
-    `SELECT u.user_id, u.first_name, u.last_name, u.email, r.role_name, u.status, u.is_blocked
+    `SELECT u.user_id, u.first_name, u.last_name, u.email, lower(r.role_name) AS role_name, u.status, u.is_blocked
        FROM user_session s
        JOIN app_user u ON u.user_id = s.user_id
        JOIN "role" r ON r.role_id = u.role_id
