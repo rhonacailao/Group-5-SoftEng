@@ -16,6 +16,10 @@ router.patch('/:id/block', users.block);
 router.patch('/:id/unblock', users.unblock);
 router.post('/:id/resend-invite', users.resendInvite);
 
+// S1-DEV-07: Rights dialog (an admin may only do this for plain users; see userAccess.js)
+router.get('/:id/rights', users.getRights);
+router.put('/:id/rights', users.setRights);
+
 // S1-DEV-06: superadmin only (an admin gets 403)
 router.patch('/:id/approve', requireRole('superadmin'), users.approve);
 router.patch('/:id/role', requireRole('superadmin'), users.setRole);

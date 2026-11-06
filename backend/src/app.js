@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
+import rightsRoutes from './routes/rights.routes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -22,6 +23,7 @@ app.use(cookieParser());                   // fills req.cookies
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/rights', rightsRoutes);
 
 app.use(notFound);     // must stay after all routes
 app.use(errorHandler); // must be the very last one
