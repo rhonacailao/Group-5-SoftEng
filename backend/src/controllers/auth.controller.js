@@ -36,6 +36,12 @@ export function me(req, res) {
   res.json({ ok: true, user: authService.toPublicUser(req.user) });
 }
 
+export async function forgotPassword(req, res) {
+  await authService.requestPasswordReset((req.body ?? {}).email);
+  // Same answer whether or not the email exists
+  res.json({ ok: true, message: 'If an account exists for that email, a reset link is on its way.' });
+}
+
 export async function setPassword(req, res) {
   const { purpose } = await authService.setPasswordWithToken(req.body ?? {});
   res.json({ ok: true, purpose, message: 'Password saved. You can now log in.' });
