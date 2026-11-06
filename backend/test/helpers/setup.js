@@ -16,8 +16,8 @@ import app from '../../src/app.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const migrationsDir = path.resolve(here, '../../../supabase/migrations');
-// Karla's user tables first, then the extra tables login needs
-const migrations = ['20261105110500_userManagement.sql', '20261106090000_authSupport.sql'];
+// Karla's tables first, then the extra pieces login needs
+const migrations = ['20261105110500_userManagement.sql', '20261105130000_password_reset_token.sql', '20261106090000_authSupport.sql'];
 
 export const db = new PGlite();
 let chain = Promise.resolve(); // PGlite runs one thing at a time, so we queue transactions
