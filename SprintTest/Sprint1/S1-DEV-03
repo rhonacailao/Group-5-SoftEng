@@ -1,0 +1,22 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S1-DEV-03
+Task Name: Login and logout with session handling; password hashing and set-password on first login; blocked users cannot sign in   
+Assigned Team Member: Reb Emnacin (Developer)  
+Sprint / Week: Sprint 1 / Week 2   
+Objective: Implement secure login/logout session handling, password hashing mechanisms, forced set-password flows on first login, and access restrictions blocking suspended/blocked users from signing in.
+
+
+Test Case ID: TC-DEV-03
+Test Component: Authentication Logic: Login/Logout, Hashing, First Login & Blocked User Check (S1-DEV-03)
+Test Description: Verify that backend authentication successfully handles login/logout sessions, enforces secure password hashing, requires a set-password on first login, and explicitly blocks suspended accounts from signing in.
+Test Steps:
+-Attempt login with valid credentials and verify session creation/token issuance and logout termination.
+-Inspect database storage to confirm passwords are securely hashed.
+-Log in with a newly registered account and verify redirection to the set-password flow.
+-Attempt login with an account flagged as blocked/suspended and verify that access is denied with an appropriate error message.
+
+Expected Result: Login/logout sessions operate securely, passwords remain hashed, first-time users must establish their password, and blocked accounts are successfully prevented from signing in.
+Actual Result: Authentication logic, hashing, session management, and block-list checks implemented and validated successfully.
+Status: PASS ✅
+

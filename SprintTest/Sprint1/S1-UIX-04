@@ -1,0 +1,21 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+
+Task ID: S1-UIX-04
+Task Name: Hi-fi mockups (login, register, main page, User Management, Rights)   
+Assigned Team Member: Beatriz Marie Bautista (UI/UX Designer)   
+Sprint / Week: Sprint 1 / Week 2   
+Objective: Produce high-fidelity visual mockups incorporating the design system for the login, registration, 
+main dashboard page, User Management list, and Rights management screens.
+
+Test Case ID: TC-UIX-04
+Test Component: High-Fidelity Visual Mockups
+Test Description: Verify that high-fidelity mockups are successfully developed for the authentication screens, 
+main dashboard, User Management list, and Rights management interfaces, strictly adhering to the established UI/UX design system.
+Test Steps:
+-Review the high-fidelity design prototypes or static exports for color consistency, typography alignment, and component styling.
+-Inspect the login, register, and main dashboard screen mockups against usability and accessibility standards.
+-Validate that the User Management table and Rights management dialog mockups accurately represent administrative control requirements.
+Expected Result: Comprehensive, polished high-fidelity mockups are delivered, providing clear visual blueprints for frontend developers to build out production UI components.
+Actual Result: High-fidelity mockups successfully created and verified for all core views.
+Status: PASS ✅
