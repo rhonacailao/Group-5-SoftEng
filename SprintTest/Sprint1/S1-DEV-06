@@ -1,0 +1,23 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+
+Task ID: S1-DEV-06
+Task Name: Superadmin: approve pending users and designate admins; block removing or disabling the last remaining superadmin
+Assigned Team Member: Reb Emnacin (Developer)
+Sprint / Week: Sprint 1 / Week 2
+Objective: Build Superadmin-exclusive capabilities for approving pending user registrations and designating user roles to admin status, 
+alongside implementing backend safety guards to prevent the removal, deletion, or disabling of the last remaining Superadmin account.
+
+Test Case ID: TC-DEV-06
+Test Component: Superadmin Privileges & Last-Superadmin Guard (S1-DEV-06)
+Test Description: Verify that Superadmins can successfully approve pending user accounts, promote users to admin status, 
+and that system safety guards prevent the removal or disabling of the sole remaining Superadmin.
+Test Steps:
+Log in as a Superadmin and review pending user registration requests.
+-Approve a pending user account and verify activation.
+-Designate a standard user account to an Admin role and confirm permission updates.
+-Attempt to delete, block, or demote the final remaining Superadmin account; verify that the system rejects the operation and triggers an error safeguard.
+
+Expected Result: Superadmin workflows execute accurately, and the last-superadmin protection guard successfully prevents top-level account lockout or removal.
+Actual Result: Superadmin approval flows, role designation, and last-superadmin safety guards implemented and verified successfully.
+Status: PASS ✅
