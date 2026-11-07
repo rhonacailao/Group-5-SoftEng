@@ -1,0 +1,21 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S1-DEV-05
+Task Name: User Management screen: user list, Add User, Edit User, Block/Unblock; Admin manages Users only and Superadmin accounts are hidden
+Assigned Team Member: Reb Emnacin (Developer)
+Sprint / Week: Sprint 1 / Week 2
+Objective: Implement the frontend User Management screen and backend APIs allowing administrators to view user directories, 
+add/edit user profiles, and toggle block/unblock statuses, while ensuring regular admins are restricted to managing standard users and Superadmin accounts remain hidden.
+
+Test Case ID: TC-DEV-05
+Test Component: User Management Screen & Admin Visibility Limits (S1-DEV-05)
+Test Description: Verify that the User Management screen supports complete CRUD and status-toggle workflows for regular administrators, and that security rules strictly hide Superadmin accounts from non-superadmin admin views.
+Test Steps:
+-Log in as an administrator and access the User Management screen.
+-Verify that the user directory displays the list of standard users while omitting any Superadmin accounts.
+-Execute 'Add User' and 'Edit User' operations and verify successful database updates.
+-Toggle the block/unblock status on a user account and verify immediate access restriction.
+
+Expected Result: Administrators can seamlessly manage standard user accounts through the UI, and security barriers successfully conceal Superadmin accounts from regular admin views.
+Actual Result: User Management screen components and role visibility restrictions implemented and validated successfully.
+Status: PASS ✅

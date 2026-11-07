@@ -1,0 +1,45 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S1-TST-03
+Task Name: Test cases: User Management (add, edit, block/unblock, approve, designate admin; Admin cannot see or edit Superadmin; last-superadmin guard)
+Assigned Team Member: Ian Carlo Balajadia (Tester)
+Sprint / Week: Sprint 1 / Week 2
+Objective: Develop comprehensive test cases and verification scenarios for the User Management module features, covering user creation, editing, blocking/unblocking, 
+account approval workflows, and admin role delegation rules, alongside strict validation for admin restrictions and the last-superadmin guard.
+
+Test Case ID: TC-UM-01
+Test Component: User Management CRUD & Status Workflows
+Test Description: Verify that administrators can successfully perform user addition, profile editing, status toggling (blocking/unblocking), 
+pending account approvals, and admin role delegation.
+
+Test Steps:
+-Log in as an authorized administrator and navigate to the User Management module.
+-Test adding a new user account and editing existing user details.
+-Approve a pending registration request and verify that the account status transitions to active.
+-Toggle the block/unblock flag on a user account and verify immediate access restriction/restoration.
+-Assign an admin role to a standard user and verify permission elevation.
+Expected Result: All user management actions execute successfully, updating the database state and enforcing role adjustments accurately.
+Status: PASS ✅
+
+
+Test Case ID: TC-UM-02
+Test Component: Admin Role Boundary & Visibility Restrictions
+Test Description: Verify that regular Admin users are strictly restricted from viewing, editing, or modifying any Superadmin accounts within the system.
+Test Steps:
+-Log in using credentials associated with a standard Admin role (non-superadmin).
+-Access the User Management directory list and inspect visible user records.
+-Verify that all Superadmin accounts are completely hidden from the list view.
+-Attempt to access or modify a Superadmin profile via direct URL navigation or API calls, and verify that the request is rejected with a forbidden (403) status.
+Expected Result: Regular administrators have zero visibility or editing access over Superadmin accounts, maintaining strict hierarchical boundaries.
+Status: PASS ✅
+
+Test Case ID: TC-UM-03
+Test Component: Last-Superadmin System Safety Guard
+Test Description: Verify that the system strictly prevents the deletion, blocking, or demotion of the last remaining Superadmin account.
+Test Steps:
+-Set up a test environment state where exactly one active Superadmin account exists.
+-Attempt to block, delete, or demote this sole remaining Superadmin account through the management interface or backend action.
+-Observe system behavior and inspect error handling responses.
+-Verify that the safety guard blocks the transaction and displays an explicit error warning (e.g., "Cannot remove the final Superadmin").
+Expected Result: The system enforces the last-superadmin guardrail successfully, preventing accidental lockout or loss of top-level administrative control.
+Status: PASS ✅
