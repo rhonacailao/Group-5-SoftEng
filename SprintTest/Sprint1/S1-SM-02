@@ -2,6 +2,9 @@ This document outlines the testing strategy, scope, and acceptance criteria for 
 focusing on repository governance, project scaffolding, database connections, 
 and base table migrations.
 
+Verified and tested by: Ian Carlo A. Balajadia
+
+
 Test Case ID: TC-SM-04
 Test Component: Agile Sprint Board & Backlog Setup
 Test Description: Verify that the GitHub/Project management board is initialized with Sprint 1 columns (To Do, In Progress, Done) and user stories.

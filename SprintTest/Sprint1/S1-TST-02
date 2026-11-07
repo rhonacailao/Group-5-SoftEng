@@ -1,0 +1,46 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+
+Task ID: S1-TST-02
+
+Task Name: Test cases: register, login and logout, set and reset password (expired token handling)
+
+Assigned Team Member: Ian Carlo Balajadia (Tester)
+
+Sprint / Week: Sprint 1 / Week 2
+
+Objective: Develop comprehensive test cases and validation scenarios for core authentication and password management features, covering user registration, login/logout session handling, first-time password setup, and secure reset token expiration/reuse checks.
+
+Test Case ID: TC-REG-01
+Test Component: User Registration & Session Handling   
+Test Description: Verify that new account registrations successfully capture details, assign a default "Pending" status, and that valid login/logout sessions function smoothly.Test Steps:
+-Submit a new user registration form via the UI and verify database record insertion.
+-Attempt to log in with the newly registered account before admin approval; 
+-verify login is blocked due to pending status.Log in with an approved account and verify active session token issuance/cookie creation.
+-Trigger the logout action and verify session termination and redirection.
+
+Expected Result: Registration properly restricts unapproved users, while valid users can successfully establish and terminate active login sessions.
+Status: PASS ✅
+
+Test Case ID: TC-PWD-01
+Test Component: First-Time Password Setup & Reset Flows
+Test Description: Verify that newly approved users are prompted to set their password on first login, and that password reset requests trigger secure token generation.
+Test Steps:
+-Log in with a newly approved user account and verify mandatory redirection to the set-password interface.
+-Submit a new password and confirm successful update in the database with secure hashing.
+-Navigate to the forgot password screen and submit a registered email address to trigger a reset request.
+
+Expected Result: First-time users successfully set their passwords, and password reset requests correctly dispatch unique reset links/tokens.
+Status: PASS ✅
+
+Test Case ID: TC-PWD-02
+Test Component: Token Expiration & Reuse Prevention
+Test Description: Verify that expired or already-used password reset tokens are strictly rejected by the backend validation logic.
+Test Steps:
+-Generate a password reset token and simulate a time lapse past the expiration threshold (or submit an expired token directly).
+-Attempt to submit a new password using the expired token; verify that the system rejects the request with an expiration error.
+-Successfully use a valid reset token once, then attempt to reuse the exact same token a second time.
+-Verify that the system blocks reuse and flags the token as invalid.
+
+Expected Result: The system enforces strict security boundaries by rejecting expired timestamps and preventing the reuse of consumed password reset tokens.
+Status: PASS ✅

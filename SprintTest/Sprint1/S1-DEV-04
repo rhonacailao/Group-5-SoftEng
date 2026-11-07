@@ -1,0 +1,19 @@
+Task ID: S1-DEV-04
+Task Name: Reset password: request, emailed token, reset form
+Assigned Team Member: Reb Emnacin (Developer)
+Sprint / Week: Sprint 1 / Week 2
+Objective: Develop the complete password reset workflow, including the reset request trigger, secure token generation/emailing, and the dedicated password reset form interface.
+
+
+Test Case ID: TC-DEV-04
+Test Component: Password Reset Workflow: Request, Token & Reset Form   
+Test Description: Verify that users can request a password reset, receive a secure token (simulated/emailed), and successfully submit new credentials via the password reset form.
+Test Steps:
+-Trigger a password reset request from the login interface using a registered email address.
+-Verify that a unique, time-sensitive reset token is generated and recorded in the system.
+-Access the password reset form using the valid token and submit a new password.
+-Attempt to log in using the newly updated password.
+
+Expected Result: Password reset requests successfully generate tokens, load the reset form correctly, and update user credentials upon valid submission while invalidating the used token.
+Actual Result: Password reset request, token generation, and reset form submission flow verified successfully.
+Status: PASS ✅
