@@ -6,6 +6,7 @@ import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import rightsRoutes from './routes/rights.routes.js';
+import menuRoutes from './routes/menu.routes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -24,6 +25,7 @@ app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/rights', rightsRoutes);
+app.use('/api/menu', menuRoutes);
 
 app.use(notFound);     // must stay after all routes
 app.use(errorHandler); // must be the very last one
