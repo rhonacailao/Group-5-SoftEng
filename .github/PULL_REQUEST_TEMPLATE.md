@@ -2,8 +2,8 @@
 Briefly describe the changes introduced in this PR and why they were made.
 
 ## Related Issue / Task ID
-- **Task ID:** (e.g., S1-DEV-01)
-- **Assigned Team Member:** #(issue number)
+- **Task ID:** 
+- **Assigned Team Member:** 
 - **Role:** 
 
 ## Type of Change
