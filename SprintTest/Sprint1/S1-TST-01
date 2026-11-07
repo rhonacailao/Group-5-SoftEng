@@ -1,0 +1,32 @@
+This document outlines the testing strategy, scope, and acceptance criteria for Sprint 1 Software Engineering project, 
+focusing on repository governance, project scaffolding, database connections, 
+and base table migrations.
+
+Task ID: S1-TST-01
+Task Name: Sprint 1 test plan and acceptance criteria
+Assigned Team Member: Ian Carlo Balajadia (Tester)
+Sprint / Week: Sprint 1 / Week 1
+Objective: Develop the comprehensive Sprint 1 Test Plan and define testable acceptance criteria for Module 1 (Authentication & User Management), covering user registration default statuses, login authentication logic, password reset token flows, and role-based permissions matrix verification.
+
+Verified and tested by: Ian Carlo A. Balajadia
+
+TC-AUTH-01: User Registration Status Default
+Test Description: Verify that when a new user registers an account, 
+their status defaults to "Pending" and blocks login access until approved by an administrator.
+Expected Result: Newly registered accounts cannot log in immediately and are restricted by the pending status flag.
+Status: PASS ✅
+
+TC-AUTH-02: User Authentication / Login Logic
+Test Description: Verify successful login for approved users using valid credentials, and proper error handling for invalid credentials.
+Expected Result: Authenticated users receive valid session tokens/cookies, while invalid attempts are rejected
+Status: PASS ✅
+
+TC-AUTH-03: Password Reset Token Flows
+Test Description: Verify secure password reset token generation, expiration limits, and token reuse prevention.
+Expected Result: Reset links generate unique time-sensitive tokens, expire appropriately, and cannot be reused.
+Status: PASS ✅
+
+TC-AUTH-04: Role-Based Permissions Matrix (RBAC)
+Test Description: Verify that access controls properly restrict routes and actions based on user roles (Superadmin, Admin, and standard User).
+Expected Result: Users only have access to endpoints and UI views permitted by their designated role tier.
+Status: PASS ✅

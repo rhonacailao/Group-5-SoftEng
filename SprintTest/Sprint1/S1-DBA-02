@@ -1,0 +1,23 @@
+This document outlines the testing strategy, scope, and acceptance criteria for Sprint 1 Software Engineering project, 
+focusing on repository governance, project scaffolding, database connections, 
+and base table migrations.
+
+Task ID: S1-DBA-02
+Task Name: Migration: HOPE base tables and sample data from HopeDB_audit.sql
+Assigned Team Member: Karla Mae Ibuig (DB Admin)
+Sprint / Week: Sprint 1 / Week 1
+Objective: Execute database migration scripts to establish core HOPE ERP base tables and populate initial sample data from HopeDB_audit.sql without constraint violations.
+
+Verified and tested by: Ian Carlo A. Balajadia
+
+
+Test Case ID: TC-DBA-02
+Test Component: Database Migration: Base Tables & Sample Data (S1-DBA-02)
+Test Description: Verify that database migration scripts successfully create all core HOPE ERP base tables and populate them with initial sample data from HopeDB_audit.sql without integrity or constraint violations.
+Test Steps:
+Locate the database migration and SQL script files (such as HopeDB_audit.sql) within the repository structure.
+Execute the migration script against the target PostgreSQL/Supabase database instance using a database management tool (like DBeaver) or CLI runner.
+Inspect the database schema and table rows to verify that base tables, relations, and sample audit data are correctly established.
+Expected Result: All core base tables are successfully generated, foreign key constraints are properly enforced, and sample data populates without execution errors.
+Actual Result: Migration scripts executed sequentially, creating all required HOPE ERP base tables and loading sample dataset records from HopeDB_audit.sql successfully.
+Status: PASS ✅

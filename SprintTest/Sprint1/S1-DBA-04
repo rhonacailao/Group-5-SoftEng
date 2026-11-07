@@ -1,0 +1,16 @@
+Task ID: S1-DBA-04
+Task Name: Migration: password reset token table (hashed, expiry, used flag)   
+Assigned Team Member: Karla Mae Ibuig (DB Admin)   Sprint / Week: Sprint 1 / Week 1   
+Objective: Build and apply migration scripts for the password reset token table, ensuring proper support for token hashing, 
+expiration timestamps, and single-use flags.
+
+
+TC-DBA-04: Password Reset Token Table Migration
+Test Description: Verify that the password reset token migration script successfully 
+provisions the token table supporting hashed tokens, expiration timestamps, and single-use usage flags.
+Test Steps:
+-Execute the password reset token table migration script.
+-Inspect table columns to ensure fields for token hashing, expiration limits, and use flags are present.
+-Validate index performance and uniqueness constraints on token hashes.
+Expected Result: The password reset token table is correctly created, enabling secure token tracking and prevention of token reuse.
+Status: PASS ✅

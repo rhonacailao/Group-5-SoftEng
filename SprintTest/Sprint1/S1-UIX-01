@@ -1,0 +1,24 @@
+This document outlines the testing strategy, scope, and acceptance criteria for Sprint 1 Software Engineering project, 
+focusing on repository governance, project scaffolding, database connections, 
+and base table migrations.
+
+Task ID: S1-UIX-01
+Task Name: Design system: colors, typography, core components
+Assigned Team Member: Beatriz Marie Bautista (UI/UX Designer)
+Sprint / Week: Sprint 1 / Week 1
+Objective: Establish a cohesive visual language and design system, including defined color palettes, typography scales, and reusable core components for the HOPE, Inc. ERP project.
+
+
+Verified and tested by: Ian Carlo A. Balajadia
+
+
+Test Case ID: TC-UIX-01
+Test Component: Design System: Colors, Typography, & Core Components (S1-UIX-01)
+Test Description: Verify that the UI/UX design system establishes a cohesive visual language, including defined color palettes, typography scales, and reusable core components for the HOPE, Inc. ERP project.
+Test Steps:
+-Review the UI/UX design deliverables and style guides (such as Figma mockups or documentation) provided by the designer.
+-Verify that primary/secondary color palettes, font hierarchies, and spacing rules comply with accessibility and branding standards.
+-Inspect core component libraries (e.g., buttons, input fields, navigation bars, and cards) for consistency and usability.
+Expected Result: A complete design system is documented and accessible, offering standardized styles and reusable components that can be directly implemented by frontend developers.
+Actual Result: Design system established with clear color tokens, typography scales, and core UI components ready for frontend integration.
+Status: PASS ✅

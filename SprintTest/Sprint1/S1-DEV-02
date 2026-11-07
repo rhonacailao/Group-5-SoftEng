@@ -1,0 +1,19 @@
+
+Task ID: S1-DEV-02
+Task Name: Register user form and API (new users start as pending)   
+Assigned Team Member: Reb Emnacin (Developer)   
+Sprint / Week: Sprint 1 / Week 1   
+Objective: Develop the frontend user registration form and backend API endpoint ensuring newly created user accounts 
+default to a "Pending" status.
+
+
+TC-DEV-02: User Registration Form & API
+Test Description: Verify that the frontend user registration form and backend API endpoint correctly capture 
+registration data and ensure newly created user accounts default to a "Pending" status.
+Test Steps:
+-Submit a new user registration via the frontend form UI.
+-Inspect the network payload and backend API request handling.
+-Query the database to verify the newly inserted user record has its status explicitly set to "Pending".
+Expected Result: Registration requests process successfully through the API, and new accounts correctly default to 
+pending status, restricting immediate access.
+Status: PASS ✅
