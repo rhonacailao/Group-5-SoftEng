@@ -2,8 +2,8 @@
 Briefly describe the changes introduced in this PR and why they were made.
 
 ## Related Issue / Task ID
-- **Task ID:** (e.g., S1-DEV-01)
-- **Assigned Team Member:** #(issue number)
+- **Task ID:** 
+- **Assigned Team Member:** 
 - **Role:** 
 
 ## Type of Change
@@ -13,8 +13,16 @@ Briefly describe the changes introduced in this PR and why they were made.
 - [ ] Documentation / Scrum artifact
 
 ## Definition of Done Checklist
-- [ ] Code has been self-reviewed and tested locally
-- [ ] Acceptance criteria met
-- [ ] Changes adhere to project coding guidelines
-- [ ] Peer review completed and approved by at least 1 teammate
-- [ ] All conversation threads/comments have been resolved
+### Quality & Verification
+- [ ] Code has been self-reviewed, run locally, and has no leftover debug/console statements.
+- [ ] Acceptance criteria from the linked issue are fully met.
+- [ ] Quality gates pass (`npm test` in backend, `npm run build` / `lint` in frontend)[cite: 2].
+
+### Security & Data Standards
+- [ ] Server-side authentication/permission checks applied (`requireAuth`)[cite: 4].
+- [ ] No hardcoded passwords, tokens, or `.env` secrets committed[cite: 4].
+
+### Review & Process
+- [ ] Peer review completed and approved by at least 1 teammate (not the author)[cite: 2].
+- [ ] All conversation threads and comments resolved[cite: 2].
+- [ ] Sprint Task Plan row updated with PR link[cite: 7].
