@@ -105,6 +105,19 @@ function UserManagementPage() {
     }
   };
 
+  // Superadmin only: PATCH /api/users/:id/role. The back end saves it in the database (and the audit
+  // log) and refuses people who are not Active yet, so those errors show in the red banner.
+  const changeRole = async (u: ManagedUser, role: "admin" | "user") => {
+    const label = role === "admin" ? "an Admin" : "a plain User";
+    if (!window.confirm(`Make ${u.name} ${label}?`)) return;
+    try {
+      await api(`/api/users/${u.id}/role`, { method: "PATCH", body: { role } });
+      await load();
+    } catch (err) {
+      setError(errorMessage(err));
+    }
+  };
+
   const saveRights = (rights: Rights) => {
     if (!editingRights) return;
     setUsers((list) => list.map((u) => (u.id === editingRights.id ? { ...u, rights } : u)));
@@ -184,6 +197,18 @@ function UserManagementPage() {
                             Approve
                           </button>
                         )}
+                        {isSuperadmin(viewerRole) &&
+                          u.status === "Active" &&
+                          !u.awaitingApproval &&
+                          (u.role === "user" || u.role === "admin") && (
+                            <button
+                              type="button"
+                              onClick={() => changeRole(u, u.role === "user" ? "admin" : "user")}
+                              className={actionButton}
+                            >
+                              {u.role === "user" ? "Make admin" : "Make user"}
+                            </button>
+                          )}
                         <button type="button" onClick={() => toggleBlock(u)} className={actionButton}>
                           {u.blocked ? "Unblock" : "Block"}
                         </button>
