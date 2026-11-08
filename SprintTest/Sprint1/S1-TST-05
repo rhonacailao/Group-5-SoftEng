@@ -1,0 +1,21 @@
+Task ID: S1-TST-05
+Task Name: Automated smoke test scripts: core login workflow and main dashboard page loading
+Assigned Team Member: Ian Carlo Balajadia (Tester)
+Sprint / Week: Sprint 1 / Week 2
+Objective: Develop automated smoke test scripts to verify the core login workflow and main dashboard page loading, ensuring system availability, correct authentication handling, and proper post-login page rendering upon startup.
+
+Test Case ID: TC-TST-05
+Test Component: Automated Smoke Test Suite (Login & Main Dashboard) (S1-TST-05)
+
+Test Description: Verify that automated smoke test routines successfully execute core user login interactions, validate error handling for invalid credentials, and confirm that the main dashboard and primary navigation elements render correctly post-login.
+
+Test Steps:
+-Execute the automated login smoke test script using valid test credentials and verify successful authentication and session token generation.
+-Run automated negative test assertions for invalid credential submissions to ensure proper error messages are returned.
+-Execute automated rendering checks post-login to verify that the main dashboard layout and primary navigation bar elements load correctly without errors.
+
+Expected Result: Automated smoke test scripts execute successfully, confirming core system availability, authentication functionality, and proper dashboard rendering.
+
+Actual Result: Login smoke test routines and main dashboard automated verification scripts successfully written, executed, and passed.
+
+Status: PASS ✅

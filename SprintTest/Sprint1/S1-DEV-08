@@ -1,0 +1,20 @@
+Task ID: S1-DEV-08
+Task Name: Main page: sidebar and module tiles by role and rights, plus server-side enforcement
+Assigned Team Member: Reb Emnacin (Developer)
+Sprint / Week: Sprint 1 / Week 2
+Objective: Develop dynamic frontend sidebar navigation and dashboard module tiles that adapt based on the user's role and assigned system rights, backed by strict server-side authorization checks.
+
+Test Case ID: TC-DEV-08
+Test Component: Main Page Dynamic Rendering & Server-Side Rights Enforcement (S1-DEV-08)
+Test Description: Verify that the main dashboard sidebar and module tiles render dynamically according to active user roles and assigned rights, and that server-side endpoints enforce matching authorization guards.
+
+Test Steps:
+-Log in with different test accounts representing varying roles and module rights.
+-Inspect the main page dashboard sidebar and available module tiles to confirm they dynamically reflect permitted access.
+-Attempt direct API requests to module endpoints for which the test account lacks rights; verify server-side rejection.
+
+Expected Result: Frontend navigation and module tiles render strictly based on user rights, and backend servers enforce matching access controls.
+
+Actual Result: Main page dynamic rendering, sidebar/tile filtering, and server-side authorization checks implemented and verified successfully.
+
+Status: PASS ✅
