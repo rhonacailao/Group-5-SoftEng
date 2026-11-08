@@ -5,6 +5,7 @@ Briefly describe the changes introduced in this PR and why they were made.
 - **Task ID:** 
 - **Assigned Team Member:** 
 - **Role:** 
+- **Related Issue:**
 
 ## Type of Change
 - [ ] New feature / Sprint task
