@@ -16,13 +16,13 @@ Briefly describe the changes introduced in this PR and why they were made.
 ### Quality & Verification
 - [ ] Code has been self-reviewed, run locally, and has no leftover debug/console statements.
 - [ ] Acceptance criteria from the linked issue are fully met.
-- [ ] Quality gates pass (`npm test` in backend, `npm run build` / `lint` in frontend)[cite: 2].
+- [ ] Quality gates pass (`npm test` in backend, `npm run build` / `lint` in frontend).
 
 ### Security & Data Standards
-- [ ] Server-side authentication/permission checks applied (`requireAuth`)[cite: 4].
-- [ ] No hardcoded passwords, tokens, or `.env` secrets committed[cite: 4].
+- [ ] Server-side authentication/permission checks applied (`requireAuth`).
+- [ ] No hardcoded passwords, tokens, or `.env` secrets committed.
 
 ### Review & Process
-- [ ] Peer review completed and approved by at least 1 teammate (not the author)[cite: 2].
-- [ ] All conversation threads and comments resolved[cite: 2].
-- [ ] Sprint Task Plan row updated with PR link[cite: 7].
+- [ ] Peer review completed and approved by at least 1 teammate (not the author).
+- [ ] All conversation threads and comments resolved.
+- [ ] Sprint Task Plan row updated with PR link.
