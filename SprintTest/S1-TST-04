@@ -1,0 +1,24 @@
+Task ID: S1-TST-04
+Task Name: Permission Matrix & Rights Enforcement Test Plan
+Assigned Team Member: Ian Carlo Balajadia (Tester)
+Sprint / Week: Sprint 1 / Week 2
+Objective: Develop comprehensive test cases and verification procedures for the 
+permission matrix across Superadmin, Admin, and User roles against each specific 
+system right, ensuring UI elements and server-side validation rules correctly 
+enforce assigned rights.
+
+
+Test Case ID: TC-TST-04
+Test Component: Permission Matrix & Server-Side Enforcement (S1-TST-04)
+
+Test Description: Verify that structured test scenarios cover all role combinations (Superadmin, Admin, User) across every individual system right, and confirm that UI components and server-side logic properly hide, display, or restrict actions based on active user rights.
+
+Test Steps:
+-Map out test scenarios for every system right across Superadmin, Admin, and User tier roles.
+-Log in using test accounts for each respective role and inspect application menus and interactive action buttons for proper visibility and states.
+-Attempt restricted actions via frontend controls and direct API calls to verify server-side authorization enforcement.
+
+Expected Result: Permission matrix test scenarios are fully documented, and both UI elements and backend server checks successfully enforce access boundaries according to assigned user rights.
+Actual Result: Permission matrix test cases authored and validation procedures verified across all test accounts.
+
+Status: PASS ✅
