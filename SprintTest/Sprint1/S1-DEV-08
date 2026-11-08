@@ -4,6 +4,10 @@ Assigned Team Member: Reb Emnacin (Developer)
 Sprint / Week: Sprint 1 / Week 2
 Objective: Develop dynamic frontend sidebar navigation and dashboard module tiles that adapt based on the user's role and assigned system rights, backed by strict server-side authorization checks.
 
+
+Verified and tested by: Ian Carlo A. Balajadia
+
+
 Test Case ID: TC-DEV-08
 Test Component: Main Page Dynamic Rendering & Server-Side Rights Enforcement (S1-DEV-08)
 Test Description: Verify that the main dashboard sidebar and module tiles render dynamically according to active user roles and assigned rights, and that server-side endpoints enforce matching authorization guards.

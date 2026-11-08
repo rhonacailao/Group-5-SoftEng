@@ -4,6 +4,10 @@ Assigned Team Member: Ian Carlo Balajadia (Tester)
 Sprint / Week: Sprint 1 / Week 2
 Objective: Develop automated smoke test scripts to verify the core login workflow and main dashboard page loading, ensuring system availability, correct authentication handling, and proper post-login page rendering upon startup.
 
+
+Verified and tested by: Ian Carlo A. Balajadia
+
+
 Test Case ID: TC-TST-05
 Test Component: Automated Smoke Test Suite (Login & Main Dashboard) (S1-TST-05)
 

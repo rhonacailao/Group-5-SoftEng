@@ -5,6 +5,8 @@ Sprint / Week: Sprint 1 / Week 2
 Objective: Implement the rights management modal dialog enabling administrators and superadmins to assign and configure per-action 
 permissions dynamically organized by system module.
 
+Verified and tested by: Ian Carlo A. Balajadia
+
 Test Case ID: TC-DEV-07
 Test Component: Rights Dialog & Per-Action Permission Assignment
 Test Description: Verify that the rights management dialog correctly allows admins and superadmins to view, assign, and update per-action rights categorized by module.
