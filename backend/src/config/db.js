@@ -8,6 +8,7 @@ export let pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL, // one URL with host, user, password, db name
   ssl: { rejectUnauthorized: false },         // Supabase only accepts encrypted connections
   connectionTimeoutMillis: 10000,             // give up after 10 seconds instead of waiting forever
+  max: Number(process.env.DB_POOL_MAX) || 10, // on Vercel set DB_POOL_MAX=3 (each function instance holds its own connections)
 });
 
 // Without this, a dropped idle connection would crash the whole server
