@@ -1,0 +1,21 @@
+Task ID: S1-DEV-07
+Task Name: Rights dialog: admin/superadmin assign per-action rights by module
+Assigned Team Member: Reb Emnacin (Developer)
+Sprint / Week: Sprint 1 / Week 2
+Objective: Implement the rights management modal dialog enabling administrators and superadmins to assign and configure per-action 
+permissions dynamically organized by system module.
+
+Test Case ID: TC-DEV-07
+Test Component: Rights Dialog & Per-Action Permission Assignment
+Test Description: Verify that the rights management dialog correctly allows admins and superadmins to view, assign, and update per-action rights categorized by module.
+
+Test Steps:
+-Access the rights management dialog interface as an authorized administrator.
+-Select specific system modules and inspect the list of granular per-action rights.
+-Modify and save permission assignments for given roles and verify database updates.
+
+Expected Result: The rights dialog functions correctly, allowing structured per-action permission configuration by module.
+
+Actual Result: Rights assignment dialog and module-based permission updates implemented and verified successfully.
+
+Status: PASS ✅
