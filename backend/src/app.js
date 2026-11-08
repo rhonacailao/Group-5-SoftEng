@@ -11,6 +11,10 @@ import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
+// On Vercel every request arrives through a proxy. Without this the rate limiter would see the
+// proxy's address for everyone (so one person could lock out all users) and warn in the logs.
+if (process.env.VERCEL || process.env.TRUST_PROXY) app.set('trust proxy', 1);
+
 app.use(helmet()); // safe default security headers
 app.use(
   cors({
