@@ -1,0 +1,22 @@
+Task Details: S1-TST-06
+Task ID: S1-TST-06
+Task Name: Bug Logging, Triage, Tracking, and Re-testing    
+Assigned Team Member: Ian Carlo Balajadia (Tester)   
+Sprint / Week: Sprint 1 / Week 2  
+ Objective: Log, track, and verify bug reports across all implemented features and user interfaces during the sprint, ensuring identified defects are investigated, systematically fixed, and thoroughly re-tested to validate resolution before closure.  
+
+
+Verified and tested by: Ian Carlo A. Balajadia
+
+
+Test Case ID: TC-TST-06
+Test Component: Defect Tracking, Triage & Regression Re-testing    
+Test Description: Verify that reported defects across authentication, user management, and UI components are systematically logged, triaged with reproduction steps, fixed by development, and successfully re-tested without regression.   
+Test Steps:
+-Document and prioritize reported defects with clear steps to reproduce and expected behaviors in the bug tracking log.   
+-Coordinate with developers as code fixes are applied to resolve identified issues.  
+-Execute re-testing routines on resolved bug tickets to confirm successful fixes and verify that no secondary regressions were introduced into surrounding modules.  
+
+Expected Result: All sprint defects are successfully logged, triaged, resolved, and verified through regression testing prior to ticket closure.   
+Actual Result: Defect tracking log established, bug reports triaged, code fixes verified, and regression checks completed successfully.   
+Status: PASS ✅
