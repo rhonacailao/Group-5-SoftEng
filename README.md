@@ -113,7 +113,7 @@ Open a GitHub Issue using the **Bug Report** template (steps to reproduce, expec
 | **Scrum Master** | Rhona Angelica Cailao | `@rhonacailao` | Sprint planning and board, repo governance (branch protection, PR/issue templates), working agreement, impediment log, reviews/retros, approves DB migrations, peer evaluations |
 | **UI/UX Designer** | Beatriz Marie Bautista | `@bearbau` | Design system, wireframes, hi-fi mockups and handoff notes, usability reviews |
 | **Developer (Backend)** | Reb Emnacin | `@RebEmnacin` | App scaffold, auth (register, login, reset), User Management, module screens and APIs |
-| **DB Admin / DevSecOps** | Karla Mae Ibuig | `@karlamaemori | Supabase/PostgreSQL schema, migrations, seed data, RLS, audit log, queries and indexes |
+| **DB Admin / DevSecOps** | Karla Mae Ibuig | `@karlamaemori` | Supabase/PostgreSQL schema, migrations, seed data, RLS, audit log, queries and indexes |
 | **Tester** | Ian Carlo Balajadia | `@IanCarloArimas` | Test plans and cases, permission-matrix and regression tests, bug reports, fix verification, sign-off |
 
 ### Planned PRs per sprint
