@@ -1,156 +1,223 @@
-# HOPE, Inc. ERP
-## Group 5 Software Engineering
-A database-driven Enterprise Resource Planning (ERP) system for Hope, Inc. It centralizes customers, products, employees, and sales with strict role-based access control.
+<div align="center">
 
-## 1. ABOUT THE PROJECT
-**ERP** (Enterprise Resource Planning) replaces separate spreadsheets per department with one shared database. Every screen is a view of rows from that database, and what a person sees depends on their **role** and **rights**.
+<img src="docs/banner.svg" alt="CashWell: see where your money goes" width="100%" />
 
-### Modules
+<br/>
 
-| Module | What it manages | Main tables |
-|---|---|---|
-| Customers | Who we sell to (name, address, payment terms) | `customer` |
-| Products | Catalogue and price history | `product`, `pricehist` |
-| Human Resources | Employees, jobs, departments, job/salary history | `employee`, `job`, `department`, `jobhistory` |
-| Sales | Sale header + detail lines, payments | `sales`, `salesdetail`, `payment` |
-| Reports | 7 read-only reports (Print / Save as PDF) | reads all of the above |
-| User Management | Accounts, blocking, per-action rights | `app_user`, `role`, `module`, `rights`, `user_permission`, `password_reset_token` |
+![React](https://img.shields.io/badge/React_19-053b06?style=for-the-badge&logo=react&logoColor=5ee0a6)
+![TypeScript](https://img.shields.io/badge/TypeScript-0b5d1e?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind_v4-0dab76?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-139a43?style=for-the-badge&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-f5b83d?style=for-the-badge&logo=postgresql&logoColor=5c3b00)
 
-### User roles
+### [▶ Try the live demo](https://cashwell-finance.vercel.app) &nbsp;·&nbsp; [📘 Setup guide](SETUP.md) &nbsp;·&nbsp; [✨ Features](#-features) &nbsp;·&nbsp; [🚀 Quick start](#-quick-start)
 
-| Role | Can do |
-|---|---|
-| **Superadmin** | Everything, including approving users, designating admins and assigning any role |
-| **Admin** | Manages Users and their rights; cannot see or change Superadmin accounts |
-| **User** | Only the modules and actions an Admin has granted (36 per-action rights) |
+[![CashWell landing page](docs/screenshots/landing.png)](https://cashwell-finance.vercel.app)
 
-New registrations always start as a **User** with status **Pending** until approved. During development, team members are seeded as Superadmin.
+</div>
 
-### Key design rules
+Log income and expenses, set a monthly budget for each category, and watch a live dashboard update as you go.
 
-- **Soft delete** — deleting sets `status = 'Inactive'`; rows can be restored. Users see only Active rows; Admins see all.
-- **Stamp** — every row records the latest action, who did it and when.
-- **Derived data is not stored** — totals and current prices are calculated from `salesdetail` and `pricehist`.
-- **Security on the server** — hiding a button is not enough; the server must check rights on every request. Row Level Security (RLS) is enabled on all tables.
+> [!NOTE]
+> CashWell is a full-stack portfolio project, built to learn how the whole stack fits together.
 
-## 2. TECH STACK
-| Layer | Technology|
-| -------- | -------- |
-| Frontend | React, TypeScript, Vite, Tailwind CSS |
-| Backend  | Node.js |
-| Database | PostgreSQL |
-| Tests    |  |
+> [!TIP]
+> Just want a look? Open the [live demo](https://cashwell-finance.vercel.app) and press **Try the demo**. One click, no sign-up, six months of sample data.
 
-### Project Structure
-```
-Group-5-SoftEng/
-├── backend/            Express API (src/app.js, routes, controllers, config/db.js)
-├── frontend/           React + Vite app (pages, components)
-├── supabase/migrations SQL migrations (run in timestamp order)
-├── scripts/            migrate.cmd (preview/apply) and rollback SQL
-├── docs/database/      Database setup guide
-├── SprintTest/         Sprint test records per task (e.g. Sprint1/S1-DEV-01)
-├── CodeSCR/            Screenshot evidence for test cases
-└── .github/            PR template, issue templates, agent instructions
-```
-
-## 3. GETTING STARTED
-
-
-**Prerequisites:** Git, VS Code, Node.js + npm, a Supabase account with access to the team project.
-
-### Backend
-
-```bash
-cd backend
-npm install
-cp .env.example .env      # then fill in DATABASE_URL (never commit .env)
-npm run dev               # http://localhost:3000
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev               # http://localhost:5173
-```
-
-Other frontend scripts: `npm run build`, `npm run lint`, `npm run preview`.
-
-### Database migrations (Windows)
-
-```bat
-npx.cmd supabase login
-npx.cmd supabase link
-scripts\migrate.cmd preview    :: dry run — review pending migrations
-scripts\migrate.cmd apply      :: only after Scrum Master/team approval
-```
-
-## 4. TESTING
-
-Testing is done per sprint task. Each task has a test record in `SprintTest/SprintN/<TASK-ID>` with test cases, steps, expected/actual results and a PASS/FAIL status, backed by screenshots in `CodeSCR/`. Tests are written and verified by the Tester (`@IanCarloArimas`).
-
-### Test case format
-
-```
-Test Case ID:        TC-DEV-02
-Test Component:      Backend App Skeleton & Server Startup
-Test Steps:          1. cd backend  2. npm install  3. npm run dev
-Expected Result:     Packages install cleanly; API listens on port 3000
-Actual Result:       (what really happened)
-Status:              PASS ✅ / FAIL ❌
-Evidence:            CodeSCR/TC-DEV-02.png
-```
-
-### Bug reporting
-
-Open a GitHub Issue using the **Bug Report** template (steps to reproduce, expected behavior, fix verification). A bug is closed only after the fix is verified by someone other than the author and a regression test is added.
-
-## 5. Team and Roles
-
-| Role | Member | Username | Responsibilities |
-|---|---|---|---|
-| **Scrum Master** | Rhona Angelica Cailao | `@rhonacailao` | Sprint planning and board, repo governance (branch protection, PR/issue templates), working agreement, impediment log, reviews/retros, approves DB migrations, peer evaluations |
-| **UI/UX Designer** | Beatriz Marie Bautista | `@bearbau` | Design system, wireframes, hi-fi mockups and handoff notes, usability reviews |
-| **Developer (Backend)** | Reb Emnacin | `@RebEmnacin` | App scaffold, auth (register, login, reset), User Management, module screens and APIs |
-| **DB Admin / DevSecOps** | Karla Mae Ibuig | `@karlamaemori` | Supabase/PostgreSQL schema, migrations, seed data, RLS, audit log, queries and indexes |
-| **Tester** | Ian Carlo Balajadia | `@IanCarloArimas` | Test plans and cases, permission-matrix and regression tests, bug reports, fix verification, sign-off |
-
-### Planned PRs per sprint
-
-| Role | Per sprint | Total (4 sprints) |
-|---|---|---|
-| Developer | 8 | 32 |
-| DB Admin | 6 | 24 |
-| Tester | 6 | 24 |
-| UI/UX Designer | 5 | 20 |
-| Scrum Master | 5 | 20 |
-| **Team** | **30** | **120** |
-
-### Sprint plan
-
-| Sprint | Weeks | Focus |
-|---|---|---|
-| 1 | 1–2 | Scaffold, register/login/reset, User Management, rights, main page |
-| 2 | 3–4 | Customers and Products (with price history) |
-| 3 | 5–6 | Human Resources (employees, jobs, departments, job history) |
-| 4 | 7–8 | Sales, payments, Reports, audit log viewer, final tests and release |
+> [!CAUTION]
+> The demo account is shared by everyone who opens it. Please don't enter real financial details.
 
 ---
 
-## 6. Team Workflow
+## ✨ Features
 
-1. Pick a task from the sprint plan and open an issue using the **Sprint Task** template.
-2. Create a feature branch — **never commit directly to `main`**.
-3. Open a PR using the template; link the issue and Task ID.
-4. Get approval from at least **one teammate** and resolve all comments.
-5. Merge. Only **valid PRs** count for grading: merged, linked to an issue, approved by a teammate and non-trivial.
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <img src="docs/icons/transactions.svg" width="44" alt="" /><br/>
+      <b>Transactions</b><br/>
+      Add, edit and delete them, with paging controls to jump to the first or last page.
+    </td>
+    <td width="33%" valign="top">
+      <img src="docs/icons/search.svg" width="44" alt="" /><br/>
+      <b>Smart note search</b><br/>
+      Suggestions appear as you type, and a misspelled word gets a <i>"Did you mean…?"</i> fix. Nothing changes in the table until you press Enter.
+    </td>
+    <td width="33%" valign="top">
+      <img src="docs/icons/export.svg" width="44" alt="" /><br/>
+      <b>Filter and export</b><br/>
+      Filter by type, category and date range, then download the result as CSV.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <img src="docs/icons/budgets.svg" width="44" alt="" /><br/>
+      <b>Budgets</b><br/>
+      A monthly limit per category, with progress bars that go from green to amber to red.
+    </td>
+    <td valign="top">
+      <img src="docs/icons/dashboard.svg" width="44" alt="" /><br/>
+      <b>Dashboard</b><br/>
+      Balance, income, expenses and savings rate for any month, plus a six-month chart and a spending donut.
+    </td>
+    <td valign="top">
+      <img src="docs/icons/motion.svg" width="44" alt="" /><br/>
+      <b>Motion</b><br/>
+      Animated counters, springy modals, and hand-drawn SVG scenes: a tipping coin jar, a calculator-tapping glove and a steaming coffee cup.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <img src="docs/icons/responsive.svg" width="44" alt="" /><br/>
+      <b>Responsive</b><br/>
+      A bottom tab bar in the app and a hamburger menu on the public pages.
+    </td>
+    <td valign="top">
+      <img src="docs/icons/private.svg" width="44" alt="" /><br/>
+      <b>Private by design</b><br/>
+      JWT sessions, bcrypt passwords, and every query scoped to the logged-in user.
+    </td>
+    <td></td>
+  </tr>
+</table>
 
-**Definition of Done:** self-reviewed and tested locally · acceptance criteria met · follows coding guidelines · peer-approved · all threads resolved.
+## 📸 Screenshots
 
-### Security reminders
+<details open>
+<summary><b>Dashboard and Budgets</b></summary>
+<br/>
 
-- Never commit `.env`, passwords or access tokens.
-- Store only password hashes, never passwords.
-- Enable RLS on every new table.
-- Enforce rights on the server, not just in the UI.
+| Dashboard | Budgets |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Budgets](docs/screenshots/budgets.png) |
+
+</details>
+
+<details>
+<summary><b>Transactions and Login</b></summary>
+<br/>
+
+| Transactions | Login |
+|---|---|
+| ![Transactions](docs/screenshots/transactions.png) | ![Login](docs/screenshots/login.png) |
+
+</details>
+
+## 🚀 Quick start
+
+```bash
+git clone https://github.com/RebEmnacin/CashWell.git
+```
+
+<details open>
+<summary><b>Terminal 1: backend</b> (Python 3.10+)</summary>
+
+```bash
+cd CashWell/backend
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload
+```
+
+</details>
+
+<details open>
+<summary><b>Terminal 2: frontend</b> (Node 20.19+ or 22.12+)</summary>
+
+```bash
+cd CashWell/frontend
+npm install
+npm run dev
+```
+
+</details>
+
+Open http://localhost:5173 and press **Try the demo**.
+
+> [!IMPORTANT]
+> The backend won't start without a `SECRET_KEY`. The example `.env` has a placeholder that is fine locally. Use a real one anywhere public. Everything else, including Postgres and deployment, is in the **[setup guide](SETUP.md)**.
+
+## 🧩 How it works
+
+```mermaid
+flowchart LR
+    A["⚛️ React app<br/>Vite + Tailwind"] -- "Axios + JWT" --> B["⚡ FastAPI"]
+    B -- SQLAlchemy --> C[("🐘 PostgreSQL<br/>SQLite locally")]
+    style A fill:#ecf8f1,stroke:#0b5d1e,color:#053b06
+    style B fill:#cfeedd,stroke:#0b5d1e,color:#053b06
+    style C fill:#fdecc0,stroke:#c98a10,color:#5c3b00
+```
+
+The frontend and the API are separate apps, both deployed on Vercel, with Neon Postgres behind the API. Interactive API docs are served at `/docs` on a running backend.
+
+<details>
+<summary><b>🛠 Tech stack, and why</b></summary>
+<br/>
+
+| Layer | Choice | Why |
+|---|---|---|
+| UI | React 19 + TypeScript | Typed components catch mistakes before the browser does |
+| Build | Vite | Instant dev server and fast builds |
+| Styling | Tailwind CSS v4 | Design tokens (the green and amber theme) live in one place |
+| Motion | `motion`, React Spring | Springy modals and animated counters |
+| State | Zustand | A tiny store for the login session |
+| Charts | Recharts | Bar chart and donut with little code |
+| API | FastAPI | Typed request and response models, and free interactive docs |
+| Database | PostgreSQL (Neon) | Real aggregation in SQL, with SQLite for easy local runs |
+
+</details>
+
+<details>
+<summary><b>🔌 API at a glance</b></summary>
+<br/>
+
+| Area | Endpoints |
+|---|---|
+| Auth | `POST /auth/register` · `POST /auth/login` · `POST /auth/demo` · `GET/PATCH /auth/me` |
+| Transactions | `GET /transactions` (search, filters, paging) · `GET /transactions/export` · `POST` · `PUT /{id}` · `DELETE /{id}` |
+| Categories | `GET` · `POST` · `DELETE /{id}` |
+| Budgets | `GET` · `PUT /{category_id}` · `DELETE /{category_id}` |
+| Analytics | `GET /analytics/summary` · `/by-category` · `/monthly` |
+
+</details>
+
+<details>
+<summary><b>📁 Project layout</b></summary>
+
+```
+CashWell/
+├── backend/app/
+│   ├── routers/        auth, transactions, categories, budgets, analytics
+│   ├── models.py       SQLAlchemy tables
+│   ├── schemas.py      Pydantic request and response shapes
+│   └── security.py     JWT and bcrypt
+├── frontend/src/
+│   ├── pages/          Landing, Login, Dashboard, Transactions, Budgets, Account
+│   ├── components/     NoteSearch, TransactionModal, JarCoins, HandCalculator...
+│   └── lib/            autocorrect
+├── docs/               banner, icons and screenshots used by this README
+└── SETUP.md            Postgres and deployment
+```
+
+</details>
+
+## 🧠 Engineering decisions
+
+1. **Data isolation.** Every query filters by `user_id`, and category ownership is re-checked on every write.
+2. **The server decides the type.** Income or expense comes from the category on the server, never from the client.
+3. **Aggregation in SQL.** Totals and the six-month chart use `GROUP BY` and `SUM`, with empty months filled in.
+4. **Date-range correctness.** Month queries use an exclusive end date, so no day is missed or counted twice.
+5. **Debounced search.** Suggestions wait 200 ms after typing stops instead of calling the API on every keystroke, and a stale request is cancelled when a newer one starts.
+6. **Autocorrect from your own words.** It only suggests words that already appear in your notes, so a correction always leads to results and never invents a word.
+
+<div align="center">
+
+<br/>
+
+<img src="docs/icons/dashboard.svg" width="36" alt="" />
+
+**Built by [RebEmnacin](https://github.com/RebEmnacin)** · If CashWell helped you, a ⭐ is appreciated
+
+</div>

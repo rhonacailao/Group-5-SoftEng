@@ -3,7 +3,7 @@
 -- already ran in isolated Supabase testing before review
 -- dependencies: public.role, public.module and public.rights from S1-DBA-03
 -- doesn't create superadmin acc or passwords since that requires backend things
-
+-- Wala pa ito
 BEGIN;
 
 INSERT INTO public."role" (role_name, description)
