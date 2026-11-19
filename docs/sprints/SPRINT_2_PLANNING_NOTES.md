@@ -10,7 +10,7 @@
 ## 2. Role Priorities & Focus Areas
 | **Role** | **Priorities for Sprint 2** |
 | --- | ----- |
-| Scrum Master | Configure Sprint 2 planning notes and project board with user stories and acceptance criteria. Follow up on Sprint 1 retrospective action items. Conduct mid-sprint checks, maintain the impediment log, update velocity/burndown metrics, and facilitate the Sprint 2 review and retrospective. <br> |
+| Scrum Master | Configure Sprint 2 planning notes and project board with user stories and acceptance criteria. Follow up on Sprint 1 retrospective action items. Conduct mid-sprint checks, maintain the impediment log, update velocity/burndown metrics, and facilitate the Sprint 2 review and retrospective. |
 | Backend Developer | Build Customer CRUD, search/filter, and soft delete/restore APIs and views. Build Product catalogue CRUD, search/filter, and soft delete/restore workflows. Implement effective-date price history tracking (add/edit/delete), current-price display logic, and per-action permission checks across both modules. |
 | DB Admin | Create database views for active customers and products (filtering soft-deleted records). Configure strategic database indexes and optimize search query performance. Populate demo/seed data for customers, products, and price history tiers, and enforce delete blocks when active child records exist. |
 | UI/UX Designer | Design wireframes for Customer screens (list, search/filter, create/edit) and Product & Price History screens. Produce high-fidelity mockups and developer handoff notes. Design empty, error, and confirm-delete UI states, and conduct a usability review of built screens. |
