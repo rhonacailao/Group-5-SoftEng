@@ -27,3 +27,11 @@ export function parseId(raw) {
 export function escapeLike(text) {
   return text.replace(/[\\%_]/g, (character) => `\\${character}`);
 }
+
+// Turns "2" into 2 and keeps it between min and max. Anything that is not a number gives the fallback.
+// Used for ?page= and ?pageSize= on the list endpoints.
+export function toInt(value, fallback, min, max) {
+  const number = Number.parseInt(value, 10);
+  if (Number.isNaN(number)) return fallback;
+  return Math.min(Math.max(number, min), max);
+}
