@@ -25,4 +25,9 @@ router.post('/', requirePermission('CUSTOMER_ADD'), customers.create);
 router.get('/:custNo', requirePermission(...CUSTOMER_ACCESS), customers.get);
 router.patch('/:custNo', requirePermission('CUSTOMER_EDIT'), customers.update);
 
+// S2-DEV-03: soft delete and restore both need the Delete right (the Rights dialog has no
+// separate Restore right).
+router.delete('/:custNo', requirePermission('CUSTOMER_DELETE'), customers.remove);
+router.patch('/:custNo/restore', requirePermission('CUSTOMER_DELETE'), customers.restore);
+
 export default router;
