@@ -1,5 +1,6 @@
 import { withTransaction } from '../config/db.js';
 import * as customers from '../repositories/customer.repository.js';
+import * as audit from '../repositories/audit.repository.js';
 import { HttpError } from '../utils/httpError.js';
 import { escapeLike, toInt } from '../utils/validators.js';
 
@@ -161,5 +162,61 @@ export async function update(actor, rawCustNo, body) {
     const changes = Object.fromEntries(Object.entries(fields).filter(([key, value]) => current[key] !== value));
     if (Object.keys(changes).length === 0) return current;
     return customers.update(db, custNo, changes);
+  });
+}
+
+// ---------- S2-DEV-03: soft delete and restore ----------
+
+// DELETE /api/customers/:custNo
+// A soft delete only sets deleted_at, so nothing is lost and the customer can be restored.
+// Same rule as the database design: a parent cannot be deleted while active child records exist,
+// so a customer that still has sales is refused (the sales must be dealt with first).
+export async function remove(actor, rawCustNo) {
+  const custNo = parseCustNo(rawCustNo);
+
+  return withTransaction(actor.email, async (db) => {
+    // Lock the customer row first. A new sale for this customer needs a share lock on the same
+    // row (foreign key), so it cannot sneak in between the count below and the update.
+    const current = await customers.findByNo(custNo, db, { lock: true });
+    if (!current) throw new HttpError(404, 'Customer not found');
+    if (current.status === 'Inactive') {
+      throw new HttpError(409, 'This customer is already deleted.', { code: 'ALREADY_DELETED' });
+    }
+
+    const sales = await customers.countSales(db, custNo);
+    if (sales > 0) {
+      throw new HttpError(
+        409,
+        `${custNo} cannot be deleted: it still has ${sales} active sale${sales === 1 ? '' : 's'}.`,
+        { code: 'HAS_ACTIVE_CHILDREN' },
+      );
+    }
+
+    const deleted = await customers.setDeleted(db, custNo, true);
+    await audit.write(
+      { tableName: 'customer', action: 'DELETE', recordKey: custNo, oldValues: { status: 'Active' }, newValues: { status: 'Inactive' }, actor },
+      db,
+    );
+    return deleted;
+  });
+}
+
+// PATCH /api/customers/:custNo/restore : puts a deleted customer back in the Active list
+export async function restore(actor, rawCustNo) {
+  const custNo = parseCustNo(rawCustNo);
+
+  return withTransaction(actor.email, async (db) => {
+    const current = await customers.findByNo(custNo, db, { lock: true });
+    if (!current) throw new HttpError(404, 'Customer not found');
+    if (current.status === 'Active') {
+      throw new HttpError(409, 'This customer is not deleted.', { code: 'NOT_DELETED' });
+    }
+
+    const restored = await customers.setDeleted(db, custNo, false);
+    await audit.write(
+      { tableName: 'customer', action: 'RESTORE', recordKey: custNo, oldValues: { status: 'Inactive' }, newValues: { status: 'Active' }, actor },
+      db,
+    );
+    return restored;
   });
 }
