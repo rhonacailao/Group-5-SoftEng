@@ -60,6 +60,15 @@ export async function resetDb() {
   outbox.length = 0;
 }
 
+// Karla's base migration: the Hope Inc. business tables (customer, product, employee, sales ...)
+// with the sample rows. Call it after resetDb() in tests that read or write those tables.
+// Then Karla's soft-delete column and active views for customer and product.
+export async function loadBusinessTables() {
+  for (const file of ['20261028034011_hopeDB_audit.sql', '20261115131700_customer_product_active_views.sql']) {
+    await db.exec(fs.readFileSync(path.join(migrationsDir, file), 'utf8'));
+  }
+}
+
 export async function startApp() {
   setPool(makePool());
   await resetDb();
