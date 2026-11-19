@@ -39,7 +39,8 @@ function SetPasswordPage() {
     } catch (err) {
       setError(errorMessage(err));
       // Invalid, used or expired link: the user needs a new one
-      if (err instanceof ApiError && err.code?.startsWith("TOKEN_")) setBadLink(true);
+      if (err instanceof ApiError && err.code?.startsWith("TOKEN_"))
+        setBadLink(true);
     } finally {
       setBusy(false);
     }
