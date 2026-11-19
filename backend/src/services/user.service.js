@@ -6,7 +6,7 @@ import * as audit from '../repositories/audit.repository.js';
 import * as credentials from './credential.service.js';
 import { canManage, assertCanManage, loadTarget, loadTargetLocked, assertNotLastSuperadmin } from './userAccess.js';
 import { HttpError } from '../utils/httpError.js';
-import { checkName, checkEmail, escapeLike } from '../utils/validators.js';
+import { checkName, checkEmail, escapeLike, toInt } from '../utils/validators.js';
 
 const ROLES = ['superadmin', 'admin', 'user'];
 const STATUSES = ['Pending', 'Active', 'Inactive', 'Rejected'];
@@ -14,12 +14,6 @@ const STATUSES = ['Pending', 'Active', 'Inactive', 'Rejected'];
 // Tells the screen what it may show for each row (e.g. grey out Edit / Block)
 function withCanManage(actor, user) {
   return { ...user, canManage: canManage(actor, user) };
-}
-
-function toInt(value, fallback, min, max) {
-  const number = Number.parseInt(value, 10);
-  if (Number.isNaN(number)) return fallback;
-  return Math.min(Math.max(number, min), max);
 }
 
 function duplicateEmail(err) {
