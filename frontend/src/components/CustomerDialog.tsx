@@ -1,13 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import TextField from "./TextField";
 
-export type PayTerm = "COD" | "30D" | "45D";
-
-export const payTermLabels: Record<PayTerm, string> = {
-  COD: "COD",
-  "30D": "Net 30",
-  "45D": "Net 45",
-};
+import { payTermLabels, type PayTerm } from "../lib/payTerms";
 
 export type CustomerValues = {
   custname: string;
@@ -22,10 +16,14 @@ type CustomerDialogProps = {
   initial?: CustomerValues;
   onSave: (values: CustomerValues) => void;
   onClose: () => void;
+  /** Message from the server (e.g. "Customer name is required."), shown above the buttons */
+  error?: string;
+  /** True while the request is running, so the form cannot be sent twice */
+  busy?: boolean;
 };
 
 /** Add or edit a customer. Status and Stamp are filled in by the system, so they are not here. */
-function CustomerDialog({ custno, initial, onSave, onClose }: CustomerDialogProps) {
+function CustomerDialog({ custno, initial, onSave, onClose, error, busy = false }: CustomerDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const [values, setValues] = useState<CustomerValues>(
     initial ?? { custname: "", address: "", payterm: "30D" },
@@ -96,6 +94,12 @@ function CustomerDialog({ custno, initial, onSave, onClose }: CustomerDialogProp
           </div>
         </div>
 
+        {error && (
+          <p role="alert" className="px-6 pb-2 text-sm text-red-800">
+            {error}
+          </p>
+        )}
+
         <footer className="flex justify-end gap-3 border-t border-light-grey p-6">
           <button
             type="button"
@@ -106,7 +110,8 @@ function CustomerDialog({ custno, initial, onSave, onClose }: CustomerDialogProp
           </button>
           <button
             type="submit"
-            className="rounded-md bg-fire px-4 py-2 text-white shadow-lg hover:bg-fire-light"
+            disabled={busy}
+            className="rounded-md bg-fire px-4 py-2 text-white shadow-lg hover:bg-fire-light disabled:opacity-60"
           >
             {editing ? "Save changes" : "Add customer"}
           </button>
