@@ -69,6 +69,12 @@ export async function loadBusinessTables() {
   }
 }
 
+// Karla's audit triggers (S1-DBA-06): after this, every insert/update on the business tables
+// writes a row to audit_log with the user from app.username. Call it after loadBusinessTables().
+export async function loadAuditTriggers() {
+  await db.exec(fs.readFileSync(path.join(migrationsDir, '20261108014500_auditUserTracking.sql'), 'utf8'));
+}
+
 export async function startApp() {
   setPool(makePool());
   await resetDb();
