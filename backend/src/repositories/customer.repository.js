@@ -79,6 +79,25 @@ export async function update(db, custNo, changes) {
   return toCustomer(rows[0]);
 }
 
+// S2-DEV-03: how many sales still point at this customer. These are the "active children" that
+// block a delete (the sales table has no soft-delete column yet, so every sale counts).
+export async function countSales(db, custNo) {
+  const { rows } = await db.query(`SELECT count(*) AS n FROM sales WHERE custno = $1`, [custNo]);
+  return Number(rows[0].n);
+}
+
+// S2-DEV-03: soft delete = put a date in deleted_at; restore = empty it again. The row is never
+// removed, so the customer number and every sale linked to it stay valid.
+export async function setDeleted(db, custNo, deleted) {
+  const { rows } = await db.query(
+    `UPDATE customer SET deleted_at = ${deleted ? 'now()' : 'NULL'}
+      WHERE custno = $1
+      RETURNING custno, custname, address, payterm, deleted_at`,
+    [custNo],
+  );
+  return toCustomer(rows[0]);
+}
+
 // Search + filter + paging for the customer list.
 //   search:  words to look for in the customer number, name or address (already escaped for LIKE)
 //   payTerm: only customers with this pay term (COD, 30D or 45D)

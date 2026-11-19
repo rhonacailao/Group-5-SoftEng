@@ -123,6 +123,7 @@ export function client(base) {
     post: (u, b = {}) => call('POST', u, b),
     patch: (u, b = {}) => call('PATCH', u, b),
     put: (u, b = {}) => call('PUT', u, b),
+    delete: (u) => call('DELETE', u),
     login: (email, password = 'Passw0rd!x') => call('POST', '/api/auth/login', { email, password }),
     get cookie() { return cookie; },
   };

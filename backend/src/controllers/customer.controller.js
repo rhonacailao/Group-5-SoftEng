@@ -21,3 +21,13 @@ export async function update(req, res) {
   const customer = await customerService.update(req.user, req.params.custNo, req.body);
   res.json({ ok: true, customer });
 }
+
+export async function remove(req, res) {
+  const customer = await customerService.remove(req.user, req.params.custNo);
+  res.json({ ok: true, customer });
+}
+
+export async function restore(req, res) {
+  const customer = await customerService.restore(req.user, req.params.custNo);
+  res.json({ ok: true, customer });
+}
