@@ -20,6 +20,65 @@ function toCustomer(row) {
   };
 }
 
+// S2-DEV-02: one customer by number (null when there is none), deleted ones included.
+// lock = true keeps other writers waiting until this transaction ends (used before an edit).
+export async function findByNo(custNo, db = pool, { lock = false } = {}) {
+  const { rows } = await db.query(
+    `SELECT custno, custname, address, payterm, deleted_at
+       FROM customer
+      WHERE custno = $1
+      ${lock ? 'FOR UPDATE' : ''}`,
+    [custNo],
+  );
+  return rows[0] ? toCustomer(rows[0]) : null;
+}
+
+// S2-DEV-02: the next free number, e.g. C0083. Only counts numbers shaped like C + 4 digits.
+// Deleted customers still hold their number, so they are counted too.
+export async function nextNumber(db = pool) {
+  const { rows } = await db.query(
+    `SELECT COALESCE(MAX(substr(custno, 2)::int), 0) + 1 AS next
+       FROM customer
+      WHERE custno ~ '^C[0-9]{4}$'`,
+  );
+  return Number(rows[0].next);
+}
+
+// Makes two people adding a customer at the same moment wait for each other, so they cannot
+// both be handed the same number. The lock is released by itself when the transaction ends.
+export async function lockNumbering(db) {
+  await db.query(`SELECT pg_advisory_xact_lock(hashtext('customer_number'))`);
+}
+
+export async function insert(db, { custNo, custName, address, payTerm }) {
+  const { rows } = await db.query(
+    `INSERT INTO customer (custno, custname, address, payterm)
+     VALUES ($1, $2, $3, $4)
+     RETURNING custno, custname, address, payterm, deleted_at`,
+    [custNo, custName, address, payTerm],
+  );
+  return toCustomer(rows[0]);
+}
+
+// Changes only the fields given: { custName, address, payTerm }
+export async function update(db, custNo, changes) {
+  const columns = { custName: 'custname', address: 'address', payTerm: 'payterm' };
+  const sets = [];
+  const params = [custNo];
+  for (const [field, column] of Object.entries(columns)) {
+    if (changes[field] === undefined) continue;
+    params.push(changes[field]);
+    sets.push(`${column} = $${params.length}`);
+  }
+  const { rows } = await db.query(
+    `UPDATE customer SET ${sets.join(', ')}
+      WHERE custno = $1
+      RETURNING custno, custname, address, payterm, deleted_at`,
+    params,
+  );
+  return toCustomer(rows[0]);
+}
+
 // Search + filter + paging for the customer list.
 //   search:  words to look for in the customer number, name or address (already escaped for LIKE)
 //   payTerm: only customers with this pay term (COD, 30D or 45D)
