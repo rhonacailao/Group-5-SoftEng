@@ -19,6 +19,49 @@ function toProduct(row) {
   };
 }
 
+// S2-DEV-05: one product by code (null when there is none), deleted ones included.
+// lock = true keeps other writers waiting until this transaction ends (used before an edit).
+export async function findByCode(prodCode, db = pool, { lock = false } = {}) {
+  const { rows } = await db.query(
+    `SELECT prodcode, description, unit, deleted_at
+       FROM product
+      WHERE prodcode = $1
+      ${lock ? 'FOR UPDATE' : ''}`,
+    [prodCode],
+  );
+  return rows[0] ? toProduct(rows[0]) : null;
+}
+
+export async function insert(db, { prodCode, description, unit }) {
+  const { rows } = await db.query(
+    `INSERT INTO product (prodcode, description, unit)
+     VALUES ($1, $2, $3)
+     RETURNING prodcode, description, unit, deleted_at`,
+    [prodCode, description, unit],
+  );
+  return toProduct(rows[0]);
+}
+
+// Changes only the fields given: { description, unit }. The product code never changes: sales and
+// price history point at it.
+export async function update(db, prodCode, changes) {
+  const columns = { description: 'description', unit: 'unit' };
+  const sets = [];
+  const params = [prodCode];
+  for (const [field, column] of Object.entries(columns)) {
+    if (changes[field] === undefined) continue;
+    params.push(changes[field]);
+    sets.push(`${column} = $${params.length}`);
+  }
+  const { rows } = await db.query(
+    `UPDATE product SET ${sets.join(', ')}
+      WHERE prodcode = $1
+      RETURNING prodcode, description, unit, deleted_at`,
+    params,
+  );
+  return toProduct(rows[0]);
+}
+
 // Search + filter + paging for the product list.
 //   search: words to look for in the product code or description (already escaped for LIKE)
 //   unit:   only products sold in this unit (pc, ea, mtr, pkg or ltr)
