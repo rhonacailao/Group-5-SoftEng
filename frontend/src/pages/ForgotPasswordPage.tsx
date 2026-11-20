@@ -19,9 +19,12 @@ function ForgotPasswordPage() {
     setError(null);
     setBusy(true);
     try {
-      const res = await api<{ ok: true; message: string }>("/api/auth/forgot-password", {
-        body: { email },
-      });
+      const res = await api<{ ok: true; message: string }>(
+        "/api/auth/forgot-password",
+        {
+          body: { email },
+        },
+      );
       setMessage(res.message);
     } catch (err) {
       setError(errorMessage(err));
@@ -72,7 +75,7 @@ function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={busy}
-          className="px-4 py-2 bg-fire text-white rounded-md shadow-lg hover:bg-fire-light disabled:opacity-60"
+          className="px-4 py-2 bg-fire text-white rounded-md shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light disabled:opacity-60"
         >
           {busy ? "Sending..." : "Send reset link"}
         </button>

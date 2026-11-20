@@ -83,14 +83,14 @@ function AccountPage() {
         <div className="flex gap-3">
           <Link
             to="/forgot-password"
-            className="px-4 py-2 bg-fire text-white rounded-md shadow-lg hover:bg-fire-light"
+            className="px-4 py-2 bg-fire text-white rounded-md shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light"
           >
             Change password
           </Link>
           <button
             type="button"
             onClick={handleLogout}
-            className="px-4 py-2 bg-white text-dark rounded-md shadow-lg border border-light-grey hover:bg-light-grey"
+            className="px-4 py-2 bg-white text-dark rounded-md shadow-lg border border-light-grey transition-colors duration-200 ease-in-out hover:bg-light-grey"
           >
             Log out
           </button>

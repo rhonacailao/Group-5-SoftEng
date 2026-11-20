@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { actions, modules, type ActionId, type ModuleId, type Rights } from "../lib/roles";
+import {
+  actions,
+  modules,
+  type ActionId,
+  type ModuleId,
+  type Rights,
+} from "../lib/roles";
 
 type RightsDialogProps = {
   /** Name shown in the title, e.g. "Alex Rivera" */
@@ -14,7 +20,12 @@ type RightsDialogProps = {
  * Ticking a module switches it on; the boxes under it decide what the person may do there.
  * "All" and "None" are shortcuts.
  */
-function RightsDialog({ personName, initialRights, onSave, onClose }: RightsDialogProps) {
+function RightsDialog({
+  personName,
+  initialRights,
+  onSave,
+  onClose,
+}: RightsDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const [rights, setRights] = useState<Rights>(initialRights);
 
@@ -37,7 +48,9 @@ function RightsDialog({ personName, initialRights, onSave, onClose }: RightsDial
         ...r,
         [id]: {
           ...r[id],
-          actions: has ? r[id].actions.filter((a) => a !== action) : [...r[id].actions, action],
+          actions: has
+            ? r[id].actions.filter((a) => a !== action)
+            : [...r[id].actions, action],
         },
       };
     });
@@ -70,21 +83,22 @@ function RightsDialog({ personName, initialRights, onSave, onClose }: RightsDial
               Rights
             </h2>
             <p className="mt-1 text-sm text-dark-grey">
-              What {personName} can open and do. Tick a module to switch it on, then choose what they may do there.
+              What {personName} can open and do. Tick a module to switch it on,
+              then choose what they may do there.
             </p>
           </div>
           <div className="flex shrink-0 gap-2">
             <button
               type="button"
               onClick={() => setAll(true)}
-              className="rounded-md border border-light-grey bg-white px-3 py-1 text-sm hover:bg-light-grey"
+              className="rounded-md border border-light-grey bg-white px-3 py-1 text-sm transition-colors duration-200 ease-in-out hover:bg-light-grey"
             >
               All
             </button>
             <button
               type="button"
               onClick={() => setAll(false)}
-              className="rounded-md border border-light-grey bg-white px-3 py-1 text-sm hover:bg-light-grey"
+              className="rounded-md border border-light-grey bg-white px-3 py-1 text-sm transition-colors duration-200 ease-in-out hover:bg-light-grey"
             >
               None
             </button>
@@ -109,7 +123,10 @@ function RightsDialog({ personName, initialRights, onSave, onClose }: RightsDial
                     onChange={() => toggleModule(m.id)}
                     className="h-4 w-4 accent-fire"
                   />
-                  <i className={`fa-solid ${m.icon} fa-fw text-fire`} aria-hidden="true" />
+                  <i
+                    className={`fa-solid ${m.icon} fa-fw text-fire`}
+                    aria-hidden="true"
+                  />
                   {m.label}
                 </label>
 
@@ -118,7 +135,9 @@ function RightsDialog({ personName, initialRights, onSave, onClose }: RightsDial
                     <label
                       key={a.id}
                       className={`flex items-center gap-2 text-sm ${
-                        state.enabled ? "cursor-pointer" : "cursor-not-allowed text-dark-grey"
+                        state.enabled
+                          ? "cursor-pointer"
+                          : "cursor-not-allowed text-dark-grey"
                       }`}
                     >
                       <input
@@ -141,13 +160,13 @@ function RightsDialog({ personName, initialRights, onSave, onClose }: RightsDial
           <button
             type="button"
             onClick={() => ref.current?.close()}
-            className="rounded-md border border-light-grey bg-white px-4 py-2 hover:bg-light-grey"
+            className="rounded-md border border-light-grey bg-white px-4 py-2 transition-colors duration-200 ease-in-out hover:bg-light-grey"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="rounded-md bg-fire px-4 py-2 text-white shadow-lg hover:bg-fire-light"
+            className="rounded-md bg-fire px-4 py-2 text-white shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light"
           >
             Save rights
           </button>

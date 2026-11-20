@@ -32,7 +32,9 @@ function linksFor(role?: Role): NavItem[] {
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 rounded-md px-4 py-2 ${
-    isActive ? "bg-fire text-white shadow-lg" : "text-white hover:bg-dark-grey"
+    isActive
+      ? "bg-fire text-white shadow-lg"
+      : "text-white transition-colors duration-200 ease-in-out hover:bg-dark-grey"
   }`;
 
 function Sidebar() {
@@ -78,9 +80,12 @@ function Sidebar() {
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-md px-4 py-2 text-left hover:bg-dark-grey"
+          className="flex w-full items-center gap-3 rounded-md px-4 py-2 text-left transition-colors duration-200 ease-in-out hover:bg-dark-grey"
         >
-          <i className="fa-solid fa-right-from-bracket fa-fw" aria-hidden="true" />
+          <i
+            className="fa-solid fa-right-from-bracket fa-fw"
+            aria-hidden="true"
+          />
           Log out
         </button>
       </footer>

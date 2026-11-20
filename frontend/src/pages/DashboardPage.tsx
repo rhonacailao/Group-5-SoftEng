@@ -183,7 +183,7 @@ function DashboardPage() {
             <li key={to}>
               <Link
                 to={to}
-                className="flex h-full items-center gap-4 rounded-xl bg-paper p-6 shadow-lg hover:bg-white"
+                className="flex h-full items-center gap-4 rounded-xl bg-paper p-6 shadow-lg transition-colors duration-200 ease-in-out hover:bg-white"
               >
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-fire text-2xl text-white">
                   <i className={`fa-solid ${icon}`} aria-hidden="true" />

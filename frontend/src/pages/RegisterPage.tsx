@@ -76,7 +76,7 @@ function RegisterPage() {
             </Alert>
             <Link
               to="/login"
-              className="px-4 py-2 text-center bg-fire text-white rounded-md shadow-lg hover:bg-fire-light"
+              className="px-4 py-2 text-center bg-fire text-white rounded-md shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light"
             >
               Back to log in
             </Link>
@@ -126,7 +126,7 @@ function RegisterPage() {
               <button
                 type="submit"
                 disabled={busy}
-                className="px-4 py-2 bg-fire text-white rounded-md shadow-lg hover:bg-fire-light disabled:opacity-60"
+                className="px-4 py-2 bg-fire text-white rounded-md shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light disabled:opacity-60"
               >
                 {busy ? "Sending..." : "Register"}
               </button>

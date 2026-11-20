@@ -33,7 +33,7 @@ function Navbar() {
           <li>
             <NavLink
               to="/register"
-              className="px-4 py-1 bg-fire text-white rounded-md shadow-lg hover:bg-fire-light"
+              className="px-4 py-1 bg-fire text-white rounded-md shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light"
             >
               Try for free
             </NavLink>
@@ -41,7 +41,7 @@ function Navbar() {
           <li>
             <NavLink
               to="/login"
-              className="px-4 py-1 bg-white text-dark rounded-md shadow-lg border border-light-grey hover:bg-light-grey"
+              className="px-4 py-1 bg-white text-dark rounded-md shadow-lg border border-light-grey transition-colors duration-200 ease-in-out hover:bg-light-grey"
             >
               Log in
             </NavLink>
