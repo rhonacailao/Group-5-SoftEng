@@ -25,4 +25,9 @@ const PRODUCT_ACCESS = [
 
 router.get('/', requirePermission(...PRODUCT_ACCESS), products.list);
 
+// S2-DEV-05: Add and Edit each need their own right (per-action check)
+router.post('/', requirePermission('PRODUCT_ADD'), products.create);
+router.get('/:prodCode', requirePermission(...PRODUCT_ACCESS), products.get);
+router.patch('/:prodCode', requirePermission('PRODUCT_EDIT'), products.update);
+
 export default router;

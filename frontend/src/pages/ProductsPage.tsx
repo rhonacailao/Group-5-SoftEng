@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import { api, errorMessage } from "../lib/api";
+import { api, ApiError, errorMessage } from "../lib/api";
+import ProductDialog, { type ProductValues } from "../components/ProductDialog";
 import { unitLabels, unitOptions, type Unit } from "../lib/units";
 
 // One row as the back end sends it (GET /api/products).
@@ -25,6 +26,8 @@ type ListResponse = {
 
 type MenuResponse = { ok: true; tiles: { code: string; rights: string[] }[] };
 
+type DialogState = { mode: "add" } | { mode: "edit"; product: ApiProduct } | null;
+
 const PAGE_SIZE = 20;
 const DEMO_USER_ID = 0; // the offline demo account has no server session (see authStore.ts)
 
@@ -37,8 +40,17 @@ const tabs: { id: Tab; label: string }[] = [
   { id: "all", label: "All" },
 ];
 
-// S2-DEV-04: product list with search and filter. Read-only on purpose:
-// add / edit (S2-DEV-05), delete / restore (S2-DEV-06) and prices (S2-DEV-07/08) come later.
+// First error the server found, field messages first (e.g. "Description is required.")
+const saveMessage = (err: unknown) => {
+  if (err instanceof ApiError && err.errors) {
+    const first = Object.values(err.errors)[0];
+    if (first) return first;
+  }
+  return errorMessage(err);
+};
+
+// S2-DEV-04: product list with search and filter. S2-DEV-05: add and edit.
+// Delete / restore (S2-DEV-06) and prices (S2-DEV-07/08) come later.
 function ProductsPage() {
   const user = useAuthStore((s) => s.user);
   const isDemo = user?.id === DEMO_USER_ID;
@@ -46,6 +58,8 @@ function ProductsPage() {
   // What this person may do comes from the Rights dialog, through GET /api/menu.
   // The server checks every request again, so hiding something is only a convenience.
   const [rights, setRights] = useState<string[]>([]);
+  const canAdd = rights.includes("PRODUCT_ADD");
+  const canEdit = rights.includes("PRODUCT_EDIT");
   const canSeeDeleted = rights.includes("PRODUCT_DELETE"); // the Delete right also opens Inactive / All
 
   const [data, setData] = useState<ListResponse | null>(null);
@@ -53,6 +67,11 @@ function ProductsPage() {
   const [query, setQuery] = useState("");
   const [unit, setUnit] = useState<Unit | "">("");
   const [page, setPage] = useState(1);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [dialog, setDialog] = useState<DialogState>(null);
+  const [dialogError, setDialogError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState(""); // "Added AD0005." after a save
   // Two kinds of message, same idea as the customer page: an error about the rights
   // lookup stays; an error about the list clears the next time a load works.
   const [rightsError, setRightsError] = useState("");
@@ -93,20 +112,53 @@ function ProductsPage() {
       stale = true;
       clearTimeout(timer);
     };
-  }, [isDemo, tab, query, unit, page]);
+  }, [isDemo, tab, query, unit, page, reloadKey]);
+
+  const reload = useCallback(() => setReloadKey((k) => k + 1), []);
+
+  // ---------- add and edit (S2-DEV-05) ----------
+  // POST /api/products   and   PATCH /api/products/:prodCode
+  // The server checks the right and every field again; its message shows in the dialog and the
+  // dialog stays open so nothing typed is lost.
+  const save = async (values: ProductValues) => {
+    if (!dialog || saving) return;
+    setSaving(true);
+    try {
+      if (dialog.mode === "edit") {
+        const code = dialog.product.prodCode;
+        await api(`/api/products/${code}`, {
+          method: "PATCH",
+          body: { description: values.description, unit: values.unit },
+        });
+        setNotice(`Saved ${code}.`);
+      } else {
+        await api("/api/products", {
+          method: "POST",
+          body: { prodCode: values.prodcode, description: values.description, unit: values.unit },
+        });
+        setNotice(`Added ${values.prodcode}. Search for it to find it in the list.`);
+      }
+      setDialog(null);
+      reload();
+    } catch (err) {
+      setDialogError(saveMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const showTabs = canSeeDeleted;
   const counts = data?.counts;
   const rows = data?.products ?? [];
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const colCount = canSeeDeleted ? 4 : 3;
+  const colCount = 3 + (canSeeDeleted ? 1 : 0) + (canEdit ? 1 : 0);
   const loading = !isDemo && data === null && !error;
   const filtering = query.trim() !== "" || unit !== "";
 
   const description = canSeeDeleted
-    ? "Search and filter products. Deleted products stay here as Inactive."
-    : "Search and filter products.";
+    ? "Search, add and edit products. Deleted products stay here as Inactive."
+    : "Search, add and edit products.";
 
   return (
     <section aria-labelledby="products-title" className="flex flex-col gap-6">
@@ -126,6 +178,11 @@ function ProductsPage() {
       {error && (
         <p role="alert" className="rounded-md bg-red-200 px-4 py-2 text-red-800">
           {error}
+        </p>
+      )}
+      {notice && (
+        <p role="status" className="rounded-md bg-green-300 px-4 py-2 text-green-800">
+          {notice}
         </p>
       )}
 
@@ -192,6 +249,20 @@ function ProductsPage() {
               className="w-72 rounded-md border border-dark-grey bg-white py-2 pl-9 pr-3 shadow-lg placeholder:text-dark-grey focus:outline-none focus:ring-2 focus:ring-fire-light"
             />
           </div>
+          {canAdd && (
+            <button
+              type="button"
+              onClick={() => {
+                setDialogError("");
+                setNotice("");
+                setDialog({ mode: "add" });
+              }}
+              className="flex items-center gap-2 rounded-md bg-fire px-4 py-2 text-white shadow-lg hover:bg-fire-light"
+            >
+              <i className="fa-solid fa-plus" aria-hidden="true" />
+              Add product
+            </button>
+          )}
           {filtering && (
             <button
               type="button"
@@ -218,6 +289,7 @@ function ProductsPage() {
               <th scope="col" className="px-4 py-3 font-semibold">Description</th>
               <th scope="col" className="px-4 py-3 font-semibold">Unit</th>
               {canSeeDeleted && <th scope="col" className="px-4 py-3 font-semibold">Status</th>}
+              {canEdit && <th scope="col" className="px-4 py-3 font-semibold">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -259,6 +331,25 @@ function ProductsPage() {
                       </span>
                     </td>
                   )}
+                  {canEdit && (
+                    <td className="px-4 py-3">
+                      {/* A deleted product has to be restored before it can be edited */}
+                      {!deleted && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDialogError("");
+                            setNotice("");
+                            setDialog({ mode: "edit", product: p });
+                          }}
+                          aria-label={`Edit ${p.description}`}
+                          className={actionButton}
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               );
             })}
@@ -289,6 +380,24 @@ function ProductsPage() {
             </button>
           </div>
         </nav>
+      )}
+
+      {dialog && (
+        <ProductDialog
+          initial={
+            dialog.mode === "edit"
+              ? {
+                  prodcode: dialog.product.prodCode,
+                  description: dialog.product.description,
+                  unit: dialog.product.unit,
+                }
+              : undefined
+          }
+          error={dialogError}
+          busy={saving}
+          onSave={save}
+          onClose={() => setDialog(null)}
+        />
       )}
     </section>
   );
