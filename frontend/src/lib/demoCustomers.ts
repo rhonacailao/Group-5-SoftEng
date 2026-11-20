@@ -469,22 +469,26 @@ function readValues(input: Values): Values {
 export function demoList({
   tab,
   query,
+  payTerm,
   page,
   pageSize,
 }: {
   tab: Tab;
   query: string;
+  payTerm: PayTerm | "";
   page: number;
   pageSize: number;
 }) {
   const term = query.trim().toLowerCase();
-  const matches = term
-    ? customers.filter((c) =>
+  const matches = customers
+    .filter(
+      (c) =>
+        !term ||
         [c.custNo, c.custName, c.address].some((v) =>
           v.toLowerCase().includes(term),
         ),
-      )
-    : customers;
+    )
+    .filter((c) => !payTerm || c.payTerm === payTerm);
   const counts = {
     active: matches.filter((c) => c.status === "Active").length,
     inactive: matches.filter((c) => c.status === "Inactive").length,

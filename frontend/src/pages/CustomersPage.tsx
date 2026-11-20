@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import { api, ApiError, errorMessage } from "../lib/api";
 import CustomerDialog, {
   type CustomerValues,
 } from "../components/CustomerDialog";
 import { payTermLabels, type PayTerm } from "../lib/payTerms";
+import { useDismiss } from "../lib/useDismiss";
 import {
   DEMO_CUSTOMER_RIGHTS,
   demoCreate,
@@ -49,6 +50,20 @@ const DEMO_USER_ID = 0; // the offline demo account has no server session (see a
 const actionButton =
   "rounded-md border border-light-grey bg-white px-3 py-1 text-sm transition-colors duration-200 ease-in-out hover:bg-light-grey disabled:opacity-60";
 
+// Chips inside the filter dropdown (flat pills, like the inputs)
+const chip = (selected: boolean) =>
+  `rounded-full px-4 py-1.5 text-sm font-semibold transition-colors duration-200 ease-in-out ${
+    selected ? "bg-fire text-white" : "bg-white hover:bg-light-grey"
+  }`;
+
+const payTermOptions: { id: PayTerm | ""; label: string }[] = [
+  { id: "", label: "All" },
+  ...(Object.keys(payTermLabels) as PayTerm[]).map((id) => ({
+    id,
+    label: payTermLabels[id],
+  })),
+];
+
 const tabs: { id: Tab; label: string }[] = [
   { id: "active", label: "Active" },
   { id: "inactive", label: "Inactive" },
@@ -83,6 +98,11 @@ function CustomersPage() {
   const [data, setData] = useState<ListResponse | null>(null);
   const [tab, setTab] = useState<Tab>("active");
   const [query, setQuery] = useState("");
+  const [payTerm, setPayTerm] = useState<PayTerm | "">("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+  const closeFilter = useCallback(() => setFilterOpen(false), []);
+  useDismiss(filterRef, filterOpen, closeFilter);
   const [page, setPage] = useState(1);
   const [reloadKey, setReloadKey] = useState(0);
   // Two kinds of message, so a reload of the list can never wipe out why an action was refused:
@@ -120,10 +140,11 @@ function CustomersPage() {
       pageSize: String(PAGE_SIZE),
     });
     if (query.trim()) params.set("search", query.trim());
+    if (payTerm) params.set("payTerm", payTerm);
     const timer = setTimeout(
       () => {
         run<ListResponse>(
-          () => demoList({ tab, query, page, pageSize: PAGE_SIZE }),
+          () => demoList({ tab, query, payTerm, page, pageSize: PAGE_SIZE }),
           () => api<ListResponse>(`/api/customers?${params}`),
         )
           .then((res) => {
@@ -142,7 +163,7 @@ function CustomersPage() {
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDemo, tab, query, page, reloadKey]);
+  }, [isDemo, tab, query, payTerm, page, reloadKey]);
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), []);
 
@@ -238,6 +259,14 @@ function CustomersPage() {
 
   // Users with the Delete right can open the Inactive and All tabs; everyone else sees Active only.
   const showTabs = canDelete;
+  // Filters that differ from the default view (Active, any pay terms): shown as a badge on the button
+  const filterCount =
+    (payTerm ? 1 : 0) + (canDelete && tab !== "active" ? 1 : 0);
+  const clearFilters = () => {
+    setPayTerm("");
+    setTab("active");
+    setPage(1);
+  };
   const counts = data?.counts;
   const rows = data?.customers ?? [];
   const total = data?.total ?? 0;
@@ -309,6 +338,93 @@ function CustomersPage() {
         )}
 
         <div className="flex flex-wrap items-center gap-3">
+          {/*----------Filter dropdown: pay terms and status----------*/}
+          <div ref={filterRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setFilterOpen((o) => !o)}
+              aria-expanded={filterOpen}
+              aria-controls="customer-filter-panel"
+              aria-label="Filter customers"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full bg-[#e0d3ca] transition-colors duration-200 ease-in-out hover:bg-light-grey focus:outline-none focus-visible:ring-2 focus-visible:ring-fire-light"
+            >
+              <i
+                className="fa-solid fa-filter text-dark-grey"
+                aria-hidden="true"
+              />
+              {filterCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-fire px-1 text-xs font-bold text-white">
+                  {filterCount}
+                  <span className="sr-only"> active filters</span>
+                </span>
+              )}
+            </button>
+
+            {filterOpen && (
+              <div
+                id="customer-filter-panel"
+                role="group"
+                aria-label="Filter customers"
+                className="absolute left-0 z-30 mt-2 flex w-72 flex-col gap-4 rounded-xl bg-paper p-4 shadow-lg"
+              >
+                <fieldset>
+                  <legend className="mb-2 text-sm font-semibold text-dark-grey">
+                    Pay terms
+                  </legend>
+                  <div className="flex flex-wrap gap-2">
+                    {payTermOptions.map((o) => (
+                      <button
+                        key={o.id || "all"}
+                        type="button"
+                        aria-pressed={payTerm === o.id}
+                        onClick={() => {
+                          setPayTerm(o.id);
+                          setPage(1);
+                        }}
+                        className={chip(payTerm === o.id)}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+
+                {/* Only people with the Delete right can see deleted customers (same rule as the tabs) */}
+                {canDelete && (
+                  <fieldset>
+                    <legend className="mb-2 text-sm font-semibold text-dark-grey">
+                      Status
+                    </legend>
+                    <div className="flex flex-wrap gap-2">
+                      {tabs.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          aria-pressed={tab === t.id}
+                          onClick={() => {
+                            setTab(t.id);
+                            setPage(1);
+                          }}
+                          className={chip(tab === t.id)}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
+
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  disabled={filterCount === 0}
+                  className="self-end rounded-full px-3 py-1 text-sm font-semibold text-dark-grey transition-colors duration-200 ease-in-out hover:text-dark disabled:opacity-40"
+                >
+                  Clear filters
+                </button>
+              </div>
+            )}
+          </div>
           <div className="relative">
             <i
               className="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dark-grey"
