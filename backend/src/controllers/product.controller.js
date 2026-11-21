@@ -17,3 +17,13 @@ export async function update(req, res) {
   const product = await productService.update(req.user, req.params.prodCode, req.body);
   res.json({ ok: true, product });
 }
+
+export async function remove(req, res) {
+  const product = await productService.remove(req.user, req.params.prodCode);
+  res.json({ ok: true, product });
+}
+
+export async function restore(req, res) {
+  const product = await productService.restore(req.user, req.params.prodCode);
+  res.json({ ok: true, product });
+}
