@@ -24,6 +24,17 @@ type ProductDialogProps = {
  * because sales and price history point at it. Status is set by the system (delete / restore are
  * separate steps), so it is not here.
  */
+function ProductDialog({
+  initial,
+  onSave,
+  onClose,
+  error,
+  busy = false,
+}: ProductDialogProps) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const [values, setValues] = useState<ProductValues>(
+    initial ?? { prodcode: "", description: "", unit: "ea" },
+  );
 function ProductDialog({ initial, onSave, onClose, error, busy = false }: ProductDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const [values, setValues] = useState<ProductValues>(initial ?? { prodcode: "", description: "", unit: "ea" });
@@ -56,6 +67,11 @@ function ProductDialog({ initial, onSave, onClose, error, busy = false }: Produc
           <h2 id="product-title" className="text-2xl font-bold">
             {editing ? "Edit product" : "Add product"}
           </h2>
+          {editing && (
+            <p className="mt-1 text-sm text-dark-grey">
+              Product code {values.prodcode}
+            </p>
+          )}
           {editing && <p className="mt-1 text-sm text-dark-grey">Product code {values.prodcode}</p>}
         </header>
 
@@ -69,6 +85,16 @@ function ProductDialog({ initial, onSave, onClose, error, busy = false }: Produc
                 placeholder="AD0001"
                 autoComplete="off"
                 value={values.prodcode}
+                onChange={(e) =>
+                  setValues((v) => ({
+                    ...v,
+                    prodcode: e.target.value.toUpperCase(),
+                  }))
+                }
+              />
+              <p className="text-sm text-dark-grey">
+                Two letters and four digits. It cannot be changed later.
+              </p>
                 onChange={(e) => setValues((v) => ({ ...v, prodcode: e.target.value.toUpperCase() }))}
               />
               <p className="text-sm text-dark-grey">Two letters and four digits. It cannot be changed later.</p>
@@ -79,6 +105,9 @@ function ProductDialog({ initial, onSave, onClose, error, busy = false }: Produc
             label="Description"
             maxLength={30}
             value={values.description}
+            onChange={(e) =>
+              setValues((v) => ({ ...v, description: e.target.value }))
+            }
             onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
           />
           <div className="flex flex-col gap-1">
@@ -89,6 +118,9 @@ function ProductDialog({ initial, onSave, onClose, error, busy = false }: Produc
               id="unit"
               name="unit"
               value={values.unit}
+              onChange={(e) =>
+                setValues((v) => ({ ...v, unit: e.target.value as Unit }))
+              }
               onChange={(e) => setValues((v) => ({ ...v, unit: e.target.value as Unit }))}
               className="w-full rounded-sm border border-dark-grey bg-white px-4 py-2 text-dark shadow-lg focus:outline-none focus:ring-2 focus:ring-fire-light"
             >

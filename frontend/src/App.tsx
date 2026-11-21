@@ -8,6 +8,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import SetPasswordPage from "./pages/SetPasswordPage";
 import DashboardPage from "./pages/DashboardPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
+import ProductsPage from "./pages/ProductsPage";
 import AccountPage from "./pages/AccountPage";
 import CustomersPage from "./pages/CustomersPage";
 import ProductsPage from "./pages/ProductsPage";
@@ -34,12 +35,18 @@ function App() {
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/sales" element={<PlaceholderPage title="Sales" />} />
-          <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+          <Route
+            path="/settings"
+            element={<PlaceholderPage title="Settings" />}
+          />
           <Route path="/account" element={<AccountPage />} />
 
           {/* Admin and Superadmin */}
           <Route element={<RoleRoute allow={["admin", "superadmin"]} />}>
-            <Route path="/human-resources" element={<PlaceholderPage title="Human Resources" />} />
+            <Route
+              path="/human-resources"
+              element={<PlaceholderPage title="Human Resources" />}
+            />
             <Route path="/user-management" element={<UserManagementPage />} />
           </Route>
 
