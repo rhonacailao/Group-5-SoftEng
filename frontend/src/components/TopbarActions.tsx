@@ -14,14 +14,42 @@ type Notification = {
 
 // Mock data: the back end has no notifications endpoint yet.
 const initialNotifications: Notification[] = [
-  { id: 1, icon: "fa-triangle-exclamation", title: "Order TR000125 is overdue", detail: "Globus Medical, Inc", time: "2h ago", unread: true },
-  { id: 2, icon: "fa-user-plus", title: "New registration waiting for approval", detail: "User Management", time: "5h ago", unread: true },
-  { id: 3, icon: "fa-truck", title: "Order TR000126 ships tomorrow", detail: "Astronics, Inc", time: "Yesterday", unread: true },
-  { id: 4, icon: "fa-circle-check", title: "Official receipt OR000165 issued", detail: "Landec Corp.", time: "2 days ago", unread: false },
+  {
+    id: 1,
+    icon: "fa-triangle-exclamation",
+    title: "Order TR000125 is overdue",
+    detail: "Globus Medical, Inc",
+    time: "2h ago",
+    unread: true,
+  },
+  {
+    id: 2,
+    icon: "fa-user-plus",
+    title: "New registration waiting for approval",
+    detail: "User Management",
+    time: "5h ago",
+    unread: true,
+  },
+  {
+    id: 3,
+    icon: "fa-truck",
+    title: "Order TR000126 ships tomorrow",
+    detail: "Astronics, Inc",
+    time: "Yesterday",
+    unread: true,
+  },
+  {
+    id: 4,
+    icon: "fa-circle-check",
+    title: "Official receipt OR000165 issued",
+    detail: "Landec Corp.",
+    time: "2 days ago",
+    unread: false,
+  },
 ];
 
 const iconButton =
-  "relative flex h-11 w-11 items-center justify-center rounded-full bg-paper text-lg text-dark hover:bg-white";
+  "relative flex h-11 w-11 items-center justify-center rounded-full bg-paper text-lg text-dark transition-colors duration-200 ease-in-out hover:bg-white";
 
 type MenuName = "notifications" | "account";
 
@@ -38,12 +66,16 @@ function TopbarActions() {
   const close = useCallback(() => setOpen(null), []);
   useDismiss(wrapperRef, open !== null, close);
 
-  const toggle = (name: MenuName) => setOpen((cur) => (cur === name ? null : name));
+  const toggle = (name: MenuName) =>
+    setOpen((cur) => (cur === name ? null : name));
   const unread = notifications.filter((n) => n.unread).length;
-  const markAllRead = () => setNotifications((list) => list.map((n) => ({ ...n, unread: false })));
+  const markAllRead = () =>
+    setNotifications((list) => list.map((n) => ({ ...n, unread: false })));
 
   const fullName = user ? `${user.firstName} ${user.lastName}` : "Account";
-  const initials = user ? `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase() : "?";
+  const initials = user
+    ? `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase()
+    : "?";
 
   const handleLogout = async () => {
     close();
@@ -97,7 +129,9 @@ function TopbarActions() {
                     <i className={`fa-solid ${n.icon}`} aria-hidden="true" />
                   </span>
                   <span className="flex-1">
-                    <span className={`block text-sm ${n.unread ? "font-bold" : "font-semibold"}`}>
+                    <span
+                      className={`block text-sm ${n.unread ? "font-bold" : "font-semibold"}`}
+                    >
                       {n.title}
                     </span>
                     <span className="block text-xs text-dark-grey">
@@ -120,7 +154,7 @@ function TopbarActions() {
       <div className="relative">
         <button
           type="button"
-          className="flex h-11 items-center gap-2 rounded-full bg-paper pl-1.5 pr-4 hover:bg-white"
+          className="flex h-11 items-center gap-2 rounded-full bg-paper pl-1.5 pr-4 transition-colors duration-200 ease-in-out hover:bg-white"
           aria-label="Account menu"
           aria-expanded={open === "account"}
           aria-controls="account-panel"
@@ -129,7 +163,9 @@ function TopbarActions() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-fire text-sm font-bold text-white">
             {initials}
           </span>
-          <span className="hidden text-sm font-semibold sm:inline">{fullName}</span>
+          <span className="hidden text-sm font-semibold sm:inline">
+            {fullName}
+          </span>
           <i
             className={`fa-solid fa-chevron-down text-xs ${open === "account" ? "rotate-180" : ""}`}
             aria-hidden="true"
@@ -150,9 +186,12 @@ function TopbarActions() {
                 <Link
                   to="/account"
                   onClick={close}
-                  className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-white"
+                  className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors duration-200 ease-in-out hover:bg-white"
                 >
-                  <i className="fa-solid fa-user fa-fw text-fire" aria-hidden="true" />
+                  <i
+                    className="fa-solid fa-user fa-fw text-fire"
+                    aria-hidden="true"
+                  />
                   My account
                 </Link>
               </li>
@@ -160,9 +199,12 @@ function TopbarActions() {
                 <Link
                   to="/settings"
                   onClick={close}
-                  className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-white"
+                  className="flex items-center gap-3 rounded-md px-3 py-2 transition-colors duration-200 ease-in-out hover:bg-white"
                 >
-                  <i className="fa-solid fa-gear fa-fw text-fire" aria-hidden="true" />
+                  <i
+                    className="fa-solid fa-gear fa-fw text-fire"
+                    aria-hidden="true"
+                  />
                   Settings
                 </Link>
               </li>
@@ -171,9 +213,12 @@ function TopbarActions() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-white"
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors duration-200 ease-in-out hover:bg-white"
               >
-                <i className="fa-solid fa-right-from-bracket fa-fw text-fire" aria-hidden="true" />
+                <i
+                  className="fa-solid fa-right-from-bracket fa-fw text-fire"
+                  aria-hidden="true"
+                />
                 Log out
               </button>
             </div>

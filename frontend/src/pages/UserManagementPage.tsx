@@ -51,7 +51,7 @@ const roleBadge: Record<Role, string> = {
 };
 
 const actionButton =
-  "rounded-md border border-light-grey bg-white px-3 py-1 text-sm hover:bg-light-grey";
+  "rounded-md border border-light-grey bg-white px-3 py-1 text-sm transition-colors duration-200 ease-in-out hover:bg-light-grey";
 
 function UserManagementPage() {
   const viewerRole = useAuthStore((s) => s.user?.role) as Role | undefined;
@@ -63,7 +63,9 @@ function UserManagementPage() {
   // Ask the back end for the list. Admins never receive Superadmin rows from the server.
   const load = useCallback(async () => {
     try {
-      const data = await api<{ ok: true; users: ApiUser[] }>("/api/users?pageSize=100");
+      const data = await api<{ ok: true; users: ApiUser[] }>(
+        "/api/users?pageSize=100",
+      );
       setUsers(data.users.map(toManaged));
       setError("");
     } catch (err) {
@@ -83,12 +85,16 @@ function UserManagementPage() {
   }, []);
 
   // Admins never see Superadmin accounts. Superadmins see everyone.
-  const visible = users.filter((u) => isSuperadmin(viewerRole) || u.role !== "superadmin");
+  const visible = users.filter(
+    (u) => isSuperadmin(viewerRole) || u.role !== "superadmin",
+  );
 
   // Real calls: PATCH /api/users/:id/block or /unblock, then reload the list.
   const toggleBlock = async (u: ManagedUser) => {
     try {
-      await api(`/api/users/${u.id}/${u.blocked ? "unblock" : "block"}`, { method: "PATCH" });
+      await api(`/api/users/${u.id}/${u.blocked ? "unblock" : "block"}`, {
+        method: "PATCH",
+      });
       await load();
     } catch (err) {
       setError(errorMessage(err));
@@ -120,7 +126,9 @@ function UserManagementPage() {
 
   const saveRights = (rights: Rights) => {
     if (!editingRights) return;
-    setUsers((list) => list.map((u) => (u.id === editingRights.id ? { ...u, rights } : u)));
+    setUsers((list) =>
+      list.map((u) => (u.id === editingRights.id ? { ...u, rights } : u)),
+    );
     setEditingRights(null);
   };
 
@@ -139,7 +147,7 @@ function UserManagementPage() {
         </div>
         <button
           type="button"
-          className="flex items-center gap-2 rounded-md bg-fire px-4 py-2 text-white shadow-lg hover:bg-fire-light"
+          className="flex items-center gap-2 rounded-md bg-fire px-4 py-2 text-white shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light"
         >
           <i className="fa-solid fa-plus" aria-hidden="true" />
           Add user
@@ -147,7 +155,10 @@ function UserManagementPage() {
       </header>
 
       {error && (
-        <p role="alert" className="mb-4 rounded-md bg-red-200 px-4 py-2 text-red-800">
+        <p
+          role="alert"
+          className="mb-4 rounded-md bg-red-200 px-4 py-2 text-red-800"
+        >
           {error}
         </p>
       )}
@@ -157,11 +168,21 @@ function UserManagementPage() {
         <table className="w-full min-w-[40rem] text-left">
           <thead className="text-sm text-dark-grey">
             <tr>
-              <th scope="col" className="px-4 py-3 font-semibold">Name</th>
-              <th scope="col" className="px-4 py-3 font-semibold">Email</th>
-              <th scope="col" className="px-4 py-3 font-semibold">Role</th>
-              <th scope="col" className="px-4 py-3 font-semibold">Status</th>
-              <th scope="col" className="px-4 py-3 font-semibold">Actions</th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Name
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Email
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Role
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Status
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -169,10 +190,14 @@ function UserManagementPage() {
               const manageable = canManage(viewerRole, u.role);
               return (
                 <tr key={u.id} className="border-t border-light-grey">
-                  <th scope="row" className="px-4 py-3 font-semibold">{u.name}</th>
+                  <th scope="row" className="px-4 py-3 font-semibold">
+                    {u.name}
+                  </th>
                   <td className="px-4 py-3">{u.email}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-3 py-0.5 text-xs font-bold capitalize ${roleBadge[u.role]}`}>
+                    <span
+                      className={`rounded-full px-3 py-0.5 text-xs font-bold capitalize ${roleBadge[u.role]}`}
+                    >
                       {u.role}
                     </span>
                   </td>
@@ -186,14 +211,22 @@ function UserManagementPage() {
                             : "bg-yellow-200 text-yellow-900"
                       }`}
                     >
-                      {u.blocked ? "Blocked" : u.awaitingApproval ? "Awaiting approval" : u.status}
+                      {u.blocked
+                        ? "Blocked"
+                        : u.awaitingApproval
+                          ? "Awaiting approval"
+                          : u.status}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     {manageable ? (
                       <div className="flex flex-wrap gap-2">
                         {u.awaitingApproval && isSuperadmin(viewerRole) && (
-                          <button type="button" onClick={() => approve(u)} className={actionButton}>
+                          <button
+                            type="button"
+                            onClick={() => approve(u)}
+                            className={actionButton}
+                          >
                             Approve
                           </button>
                         )}
@@ -203,16 +236,29 @@ function UserManagementPage() {
                           (u.role === "user" || u.role === "admin") && (
                             <button
                               type="button"
-                              onClick={() => changeRole(u, u.role === "user" ? "admin" : "user")}
+                              onClick={() =>
+                                changeRole(
+                                  u,
+                                  u.role === "user" ? "admin" : "user",
+                                )
+                              }
                               className={actionButton}
                             >
                               {u.role === "user" ? "Make admin" : "Make user"}
                             </button>
                           )}
-                        <button type="button" onClick={() => toggleBlock(u)} className={actionButton}>
+                        <button
+                          type="button"
+                          onClick={() => toggleBlock(u)}
+                          className={actionButton}
+                        >
                           {u.blocked ? "Unblock" : "Block"}
                         </button>
-                        <button type="button" onClick={() => setEditingRights(u)} className={actionButton}>
+                        <button
+                          type="button"
+                          onClick={() => setEditingRights(u)}
+                          className={actionButton}
+                        >
                           Rights
                         </button>
                         <button type="button" className={actionButton}>
