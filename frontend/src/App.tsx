@@ -11,6 +11,7 @@ import PlaceholderPage from "./pages/PlaceholderPage";
 import ProductsPage from "./pages/ProductsPage";
 import AccountPage from "./pages/AccountPage";
 import CustomersPage from "./pages/CustomersPage";
+import ProductsPage from "./pages/ProductsPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import SystemSettingsPage from "./pages/SystemSettingsPage";
 import ProtectedRoute from "./components/ProtectedRoute";

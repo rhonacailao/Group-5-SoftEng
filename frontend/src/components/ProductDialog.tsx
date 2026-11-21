@@ -35,6 +35,9 @@ function ProductDialog({
   const [values, setValues] = useState<ProductValues>(
     initial ?? { prodcode: "", description: "", unit: "ea" },
   );
+function ProductDialog({ initial, onSave, onClose, error, busy = false }: ProductDialogProps) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const [values, setValues] = useState<ProductValues>(initial ?? { prodcode: "", description: "", unit: "ea" });
   const editing = initial !== undefined;
 
   useEffect(() => {
@@ -69,6 +72,7 @@ function ProductDialog({
               Product code {values.prodcode}
             </p>
           )}
+          {editing && <p className="mt-1 text-sm text-dark-grey">Product code {values.prodcode}</p>}
         </header>
 
         <div className="flex flex-col gap-4 p-6">
@@ -91,6 +95,9 @@ function ProductDialog({
               <p className="text-sm text-dark-grey">
                 Two letters and four digits. It cannot be changed later.
               </p>
+                onChange={(e) => setValues((v) => ({ ...v, prodcode: e.target.value.toUpperCase() }))}
+              />
+              <p className="text-sm text-dark-grey">Two letters and four digits. It cannot be changed later.</p>
             </div>
           )}
           <TextField
@@ -101,6 +108,7 @@ function ProductDialog({
             onChange={(e) =>
               setValues((v) => ({ ...v, description: e.target.value }))
             }
+            onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
           />
           <div className="flex flex-col gap-1">
             <label htmlFor="unit" className="text-md font-semibold">
@@ -113,6 +121,7 @@ function ProductDialog({
               onChange={(e) =>
                 setValues((v) => ({ ...v, unit: e.target.value as Unit }))
               }
+              onChange={(e) => setValues((v) => ({ ...v, unit: e.target.value as Unit }))}
               className="w-full rounded-sm border border-dark-grey bg-white px-4 py-2 text-dark shadow-lg focus:outline-none focus:ring-2 focus:ring-fire-light"
             >
               {unitOptions.map((u) => (
