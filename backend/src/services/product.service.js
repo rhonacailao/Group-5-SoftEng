@@ -1,5 +1,6 @@
 import { withTransaction } from '../config/db.js';
 import * as products from '../repositories/product.repository.js';
+import * as audit from '../repositories/audit.repository.js';
 import { HttpError } from '../utils/httpError.js';
 import { escapeLike, toInt } from '../utils/validators.js';
 
@@ -152,5 +153,66 @@ export async function update(actor, rawProdCode, body) {
     const changes = Object.fromEntries(Object.entries(fields).filter(([key, value]) => current[key] !== value));
     if (Object.keys(changes).length === 0) return current;
     return products.update(db, prodCode, changes);
+  });
+}
+
+// ---------- S2-DEV-06: soft delete and restore ----------
+
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+// DELETE /api/products/:prodCode
+// A soft delete only sets deleted_at, so nothing is lost and the product can be restored.
+// Same rule as the database design: a parent cannot be deleted while active child records exist,
+// so a product that still has sale lines or price history is refused.
+export async function remove(actor, rawProdCode) {
+  const prodCode = parseProdCode(rawProdCode);
+
+  return withTransaction(actor.email, async (db) => {
+    // Lock the product row first. A new sale line or price for this product needs a share lock on
+    // the same row (foreign key), so it cannot sneak in between the count below and the update.
+    const current = await products.findByCode(prodCode, db, { lock: true });
+    if (!current) throw new HttpError(404, 'Product not found');
+    if (current.status === 'Inactive') {
+      throw new HttpError(409, 'This product is already deleted.', { code: 'ALREADY_DELETED' });
+    }
+
+    const { saleLines, prices } = await products.countChildren(db, prodCode);
+    if (saleLines > 0 || prices > 0) {
+      const parts = [];
+      if (saleLines > 0) parts.push(plural(saleLines, 'sale line'));
+      if (prices > 0) parts.push(plural(prices, 'price record'));
+      throw new HttpError(
+        409,
+        `${prodCode} cannot be deleted: it still has ${parts.join(' and ')}.`,
+        { code: 'HAS_ACTIVE_CHILDREN' },
+      );
+    }
+
+    const deleted = await products.setDeleted(db, prodCode, true);
+    await audit.write(
+      { tableName: 'product', action: 'DELETE', recordKey: prodCode, oldValues: { status: 'Active' }, newValues: { status: 'Inactive' }, actor },
+      db,
+    );
+    return deleted;
+  });
+}
+
+// PATCH /api/products/:prodCode/restore : puts a deleted product back in the Active list
+export async function restore(actor, rawProdCode) {
+  const prodCode = parseProdCode(rawProdCode);
+
+  return withTransaction(actor.email, async (db) => {
+    const current = await products.findByCode(prodCode, db, { lock: true });
+    if (!current) throw new HttpError(404, 'Product not found');
+    if (current.status === 'Active') {
+      throw new HttpError(409, 'This product is not deleted.', { code: 'NOT_DELETED' });
+    }
+
+    const restored = await products.setDeleted(db, prodCode, false);
+    await audit.write(
+      { tableName: 'product', action: 'RESTORE', recordKey: prodCode, oldValues: { status: 'Inactive' }, newValues: { status: 'Active' }, actor },
+      db,
+    );
+    return restored;
   });
 }
