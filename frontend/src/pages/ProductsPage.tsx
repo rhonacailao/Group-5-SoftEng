@@ -50,7 +50,7 @@ const saveMessage = (err: unknown) => {
 };
 
 // S2-DEV-04: product list with search and filter. S2-DEV-05: add and edit.
-// Delete / restore (S2-DEV-06) and prices (S2-DEV-07/08) come later.
+// S2-DEV-06: soft delete and restore. Prices (S2-DEV-07/08) come later.
 function ProductsPage() {
   const user = useAuthStore((s) => s.user);
   const isDemo = user?.id === DEMO_USER_ID;
@@ -60,7 +60,8 @@ function ProductsPage() {
   const [rights, setRights] = useState<string[]>([]);
   const canAdd = rights.includes("PRODUCT_ADD");
   const canEdit = rights.includes("PRODUCT_EDIT");
-  const canSeeDeleted = rights.includes("PRODUCT_DELETE"); // the Delete right also opens Inactive / All
+  const canDelete = rights.includes("PRODUCT_DELETE"); // Delete right = delete AND restore
+  const canSeeDeleted = canDelete; // the Delete right also opens Inactive / All
 
   const [data, setData] = useState<ListResponse | null>(null);
   const [tab, setTab] = useState<Tab>("active");
@@ -72,11 +73,16 @@ function ProductsPage() {
   const [dialogError, setDialogError] = useState("");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState(""); // "Added AD0005." after a save
-  // Two kinds of message, same idea as the customer page: an error about the rights
-  // lookup stays; an error about the list clears the next time a load works.
+  // Three kinds of message, same idea as the customer page, so a reload of the list can never
+  // wipe out why an action was refused:
+  //   rightsError = the rights lookup failed (stays)
+  //   actionError = a delete / restore was refused (stays until the next action)
+  //   listError   = the list itself could not be loaded (clears when a load works)
   const [rightsError, setRightsError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [listError, setListError] = useState("");
-  const error = rightsError || listError;
+  const error = rightsError || actionError || listError;
+  const [busyCode, setBusyCode] = useState<string | null>(null); // product whose delete/restore is running
 
   // Rights, once
   useEffect(() => {
@@ -116,6 +122,35 @@ function ProductsPage() {
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), []);
 
+  // ---------- soft delete and restore (S2-DEV-06) ----------
+  // DELETE /api/products/:prodCode   and   PATCH /api/products/:prodCode/restore
+  // The server refuses a delete while the product still has sale lines or prices; its message
+  // shows in the banner.
+  const changeStatus = async (p: ApiProduct, action: "delete" | "restore") => {
+    if (action === "delete") {
+      const ok = window.confirm(
+        `Delete ${p.description} (${p.prodCode})?\n\nIt will be marked Inactive and can be restored later.`,
+      );
+      if (!ok) return;
+    }
+    setBusyCode(p.prodCode);
+    setActionError("");
+    setNotice("");
+    try {
+      if (action === "delete") await api(`/api/products/${p.prodCode}`, { method: "DELETE" });
+      else await api(`/api/products/${p.prodCode}/restore`, { method: "PATCH" });
+      setNotice(action === "delete" ? `Deleted ${p.prodCode}.` : `Restored ${p.prodCode}.`);
+      // Changed the last row of the last page: step back so the page is not empty
+      if (data && data.products.length === 1 && page > 1 && tab !== "all") setPage(page - 1);
+      else reload();
+    } catch (err) {
+      setActionError(errorMessage(err));
+      reload(); // someone else may have changed it: show what is really there
+    } finally {
+      setBusyCode(null);
+    }
+  };
+
   // ---------- add and edit (S2-DEV-05) ----------
   // POST /api/products   and   PATCH /api/products/:prodCode
   // The server checks the right and every field again; its message shows in the dialog and the
@@ -152,12 +187,13 @@ function ProductsPage() {
   const rows = data?.products ?? [];
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const colCount = 3 + (canSeeDeleted ? 1 : 0) + (canEdit ? 1 : 0);
+  const showActions = canEdit || canDelete;
+  const colCount = 3 + (canSeeDeleted ? 1 : 0) + (showActions ? 1 : 0);
   const loading = !isDemo && data === null && !error;
   const filtering = query.trim() !== "" || unit !== "";
 
   const description = canSeeDeleted
-    ? "Search, add and edit products. Deleted products stay here as Inactive."
+    ? "Add, edit, delete and restore products. Deleted products stay here as Inactive."
     : "Search, add and edit products.";
 
   return (
@@ -289,7 +325,7 @@ function ProductsPage() {
               <th scope="col" className="px-4 py-3 font-semibold">Description</th>
               <th scope="col" className="px-4 py-3 font-semibold">Unit</th>
               {canSeeDeleted && <th scope="col" className="px-4 py-3 font-semibold">Status</th>}
-              {canEdit && <th scope="col" className="px-4 py-3 font-semibold">Actions</th>}
+              {showActions && <th scope="col" className="px-4 py-3 font-semibold">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -331,23 +367,52 @@ function ProductsPage() {
                       </span>
                     </td>
                   )}
-                  {canEdit && (
+                  {showActions && (
                     <td className="px-4 py-3">
-                      {/* A deleted product has to be restored before it can be edited */}
-                      {!deleted && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDialogError("");
-                            setNotice("");
-                            setDialog({ mode: "edit", product: p });
-                          }}
-                          aria-label={`Edit ${p.description}`}
-                          className={actionButton}
-                        >
-                          Edit
-                        </button>
-                      )}
+                      <div className="flex flex-wrap gap-2">
+                        {deleted ? (
+                          // A deleted product has to be restored before it can be edited
+                          canDelete && (
+                            <button
+                              type="button"
+                              onClick={() => changeStatus(p, "restore")}
+                              disabled={busyCode === p.prodCode}
+                              aria-label={`Restore ${p.description}`}
+                              className={actionButton}
+                            >
+                              Restore
+                            </button>
+                          )
+                        ) : (
+                          <>
+                            {canEdit && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setDialogError("");
+                                  setNotice("");
+                                  setDialog({ mode: "edit", product: p });
+                                }}
+                                aria-label={`Edit ${p.description}`}
+                                className={actionButton}
+                              >
+                                Edit
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                type="button"
+                                onClick={() => changeStatus(p, "delete")}
+                                disabled={busyCode === p.prodCode}
+                                aria-label={`Delete ${p.description}`}
+                                className={actionButton}
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>

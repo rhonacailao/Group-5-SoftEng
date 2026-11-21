@@ -30,4 +30,9 @@ router.post('/', requirePermission('PRODUCT_ADD'), products.create);
 router.get('/:prodCode', requirePermission(...PRODUCT_ACCESS), products.get);
 router.patch('/:prodCode', requirePermission('PRODUCT_EDIT'), products.update);
 
+// S2-DEV-06: soft delete and restore both need the Delete right (the Rights dialog has no
+// separate Restore right).
+router.delete('/:prodCode', requirePermission('PRODUCT_DELETE'), products.remove);
+router.patch('/:prodCode/restore', requirePermission('PRODUCT_DELETE'), products.restore);
+
 export default router;
