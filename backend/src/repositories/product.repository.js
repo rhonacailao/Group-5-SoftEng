@@ -62,6 +62,31 @@ export async function update(db, prodCode, changes) {
   return toProduct(rows[0]);
 }
 
+// S2-DEV-06: the records that still point at this product. The design rule (HopeDB_audit.sql,
+// "a parent row cannot be soft-deleted while it still has active children") blocks a delete while
+// the product has sale lines or price history. Neither table has a soft-delete column here yet,
+// so every row counts.
+export async function countChildren(db, prodCode) {
+  const { rows } = await db.query(
+    `SELECT (SELECT count(*) FROM salesdetail WHERE prodcode = $1) AS sale_lines,
+            (SELECT count(*) FROM pricehist   WHERE prodcode = $1) AS prices`,
+    [prodCode],
+  );
+  return { saleLines: Number(rows[0].sale_lines), prices: Number(rows[0].prices) };
+}
+
+// S2-DEV-06: soft delete = put a date in deleted_at; restore = empty it again. The row is never
+// removed, so the product code and everything linked to it stay valid.
+export async function setDeleted(db, prodCode, deleted) {
+  const { rows } = await db.query(
+    `UPDATE product SET deleted_at = ${deleted ? 'now()' : 'NULL'}
+      WHERE prodcode = $1
+      RETURNING prodcode, description, unit, deleted_at`,
+    [prodCode],
+  );
+  return toProduct(rows[0]);
+}
+
 // Search + filter + paging for the product list.
 //   search: words to look for in the product code or description (already escaped for LIKE)
 //   unit:   only products sold in this unit (pc, ea, mtr, pkg or ltr)
