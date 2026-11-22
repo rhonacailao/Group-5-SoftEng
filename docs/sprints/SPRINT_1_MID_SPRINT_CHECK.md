@@ -1,6 +1,8 @@
 # [S1-SM-04] Sprint 1 Mid-Sprint Check Notes: Week 1
 
-**Project:** HOPE, Inc. ERP | **Sprint:** 1 | **Coverage:** Week 1 (Days 1-5) | 
+**Project:** HOPE, Inc. ERP 
+**Sprint:** 1 
+**Coverage:** Week 1 (Days 1-5) 
 
 ---
 
