@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import RightsDialog from "../components/RightsDialog";
+import Card from "../components/Card";
+import Badge, { type BadgeVariant } from "../components/Badge";
 import { api, errorMessage } from "../lib/api";
 import {
   canManage,
@@ -44,10 +46,10 @@ const toManaged = (u: ApiUser): ManagedUser => ({
   rights: emptyRights(),
 });
 
-const roleBadge: Record<Role, string> = {
-  superadmin: "bg-dark text-white",
-  admin: "bg-cream text-dark",
-  user: "bg-fire-light/30 text-dark",
+const roleVariant: Record<Role, BadgeVariant> = {
+  superadmin: "dark",
+  admin: "neutral",
+  user: "accent",
 };
 
 const actionButton =
@@ -164,7 +166,7 @@ function UserManagementPage() {
       )}
       {loading && <p className="mb-4 text-dark-grey">Loading users...</p>}
 
-      <div className="overflow-x-auto rounded-xl bg-paper p-2 shadow-lg">
+      <Card className="overflow-x-auto p-2">
         <table className="w-full min-w-[40rem] text-left">
           <thead className="text-sm text-dark-grey">
             <tr>
@@ -195,28 +197,26 @@ function UserManagementPage() {
                   </th>
                   <td className="px-4 py-3">{u.email}</td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-3 py-0.5 text-xs font-bold capitalize ${roleBadge[u.role]}`}
-                    >
+                    <Badge variant={roleVariant[u.role]} className="capitalize">
                       {u.role}
-                    </span>
+                    </Badge>
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`rounded-full px-3 py-0.5 text-xs font-bold ${
+                    <Badge
+                      variant={
                         u.blocked
-                          ? "bg-red-300 text-red-800"
+                          ? "danger"
                           : u.status === "Active"
-                            ? "bg-green-300 text-green-800"
-                            : "bg-yellow-200 text-yellow-900"
-                      }`}
+                            ? "success"
+                            : "warning"
+                      }
                     >
                       {u.blocked
                         ? "Blocked"
                         : u.awaitingApproval
                           ? "Awaiting approval"
                           : u.status}
-                    </span>
+                    </Badge>
                   </td>
                   <td className="px-4 py-3">
                     {manageable ? (
@@ -274,7 +274,7 @@ function UserManagementPage() {
             })}
           </tbody>
         </table>
-      </div>
+      </Card>
 
       {editingRights && (
         <RightsDialog

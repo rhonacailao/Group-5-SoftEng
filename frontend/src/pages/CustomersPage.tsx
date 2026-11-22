@@ -7,6 +7,8 @@ import CustomerDialog, {
 } from "../components/CustomerDialog";
 import EmptyState from "../components/EmptyState";
 import ErrorBanner from "../components/ErrorBanner";
+import Card from "../components/Card";
+import Badge from "../components/Badge";
 import { describeError, type ErrorInfo } from "../lib/errorInfo";
 import { payTermLabels, type PayTerm } from "../lib/payTerms";
 import { useDismiss } from "../lib/useDismiss";
@@ -397,11 +399,11 @@ function CustomersPage() {
             </button>
 
             {filterOpen && (
-              <div
+              <Card
                 id="customer-filter-panel"
                 role="group"
                 aria-label="Filter customers"
-                className="absolute left-0 z-30 mt-2 flex w-72 flex-col gap-4 rounded-xl bg-paper p-4 shadow-lg"
+                className="absolute left-0 z-30 mt-2 flex w-72 flex-col gap-4 p-4"
               >
                 <fieldset>
                   <legend className="mb-2 text-sm font-semibold text-dark-grey">
@@ -458,7 +460,7 @@ function CustomersPage() {
                 >
                   Clear filters
                 </button>
-              </div>
+              </Card>
             )}
           </div>
           <div className="relative">
@@ -492,7 +494,7 @@ function CustomersPage() {
       </div>
 
       {/*----------Table----------*/}
-      <div className="overflow-x-auto rounded-xl bg-paper p-2 shadow-lg">
+      <Card className="overflow-x-auto p-2">
         <table className="w-full min-w-[48rem] text-left">
           <caption className="sr-only">Customers</caption>
           <thead className="text-sm text-dark-grey">
@@ -617,15 +619,9 @@ function CustomersPage() {
                   <td className="px-4 py-3">{payTermLabels[c.payTerm]}</td>
                   {canDelete && (
                     <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
-                          deleted
-                            ? "border-red-900 bg-red-300 text-red-800"
-                            : "border-green-900 bg-green-300 text-green-800"
-                        }`}
-                      >
+                      <Badge variant={deleted ? "danger" : "success"}>
                         {c.status}
-                      </span>
+                      </Badge>
                     </td>
                   )}
                   <td className="px-4 py-3">
@@ -677,7 +673,7 @@ function CustomersPage() {
             })}
           </tbody>
         </table>
-      </div>
+      </Card>
 
       {/*----------Paging----------*/}
       {total > PAGE_SIZE && (

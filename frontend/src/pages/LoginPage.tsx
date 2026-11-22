@@ -3,8 +3,7 @@ import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthSplitLayout from "../components/AuthSplitLayout";
 import TextField from "../components/TextField";
-import GoogleButton from "../components/GoogleButton";
-import OrDivider from "../components/OrDivider";
+import GoogleSignIn from "../components/GoogleSignIn";
 import Alert from "../components/Alert";
 import { errorMessage } from "../lib/api";
 import {
@@ -77,7 +76,7 @@ function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <p className="text-md">
+        <p className="text-base">
           <Link to="/forgot-password" className="text-fire underline">
             Forgot password?
           </Link>
@@ -97,8 +96,7 @@ function LoginPage() {
           {busy ? "Logging in..." : "Log in"}
         </button>
 
-        <OrDivider />
-        <GoogleButton />
+        <GoogleSignIn />
 
         {DEMO_ENABLED && (
           <p className="text-center text-sm text-dark-grey">
