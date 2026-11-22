@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuthStore } from "../store/authStore";
-import { api, errorMessage } from "../lib/api";
+import { api } from "../lib/api";
 import ProductDialog, { type ProductValues } from "../components/ProductDialog";
+import ConfirmDialog from "../components/ConfirmDialog";
+import EmptyState from "../components/EmptyState";
+import ErrorBanner from "../components/ErrorBanner";
 import PriceHistoryDialog, {
   type PriceCan,
 } from "../components/PriceHistoryDialog";
 import StatusBadge from "../components/StatusBadge";
 import StatusTabs from "../components/StatusTabs";
 import { DEMO_RIGHTS } from "../lib/demoProducts";
+import { describeError, type ErrorInfo } from "../lib/errorInfo";
 import { productApi } from "../lib/productApi";
 import {
   ALL_PRODUCT_RIGHTS,
@@ -47,9 +51,7 @@ import { useDismiss } from "../lib/useDismiss";
 // ===========================================================================
 
 type DialogState =
-  | { mode: "add" }
-  | { mode: "edit"; product: ApiProduct }
-  | null;
+  { mode: "add" } | { mode: "edit"; product: ApiProduct } | null;
 
 // Chips inside the filter dropdown (flat pills, like the inputs)
 const chip = (selected: boolean) =>
@@ -106,14 +108,17 @@ function ProductsPage() {
   const [pricesFor, setPricesFor] = useState<ApiProduct | null>(null);
   const [busyCode, setBusyCode] = useState<string | null>(null); // product whose delete / restore is running
   const [notice, setNotice] = useState(""); // "Added AD0005." after a save
-  // Three kinds of message, so a reload can never wipe out why an action was refused:
+  // Three kinds of error, so a reload can never wipe out why an action was refused:
   //   rightsError = the rights lookup failed (stays)
-  //   actionError = a delete / restore was refused (stays until the next action)
+  //   actionError = a restore was refused (stays until dismissed or the next action)
   //   listError   = the list could not be loaded (clears the next time a load works)
-  const [rightsError, setRightsError] = useState("");
-  const [actionError, setActionError] = useState("");
-  const [listError, setListError] = useState("");
-  const error = rightsError || actionError || listError;
+  const [rightsError, setRightsError] = useState<ErrorInfo | null>(null);
+  const [actionError, setActionError] = useState<ErrorInfo | null>(null);
+  const [listError, setListError] = useState<ErrorInfo | null>(null);
+  // Confirm-delete state: the product waiting for a yes, and what the server said when asked
+  const [pendingDelete, setPendingDelete] = useState<ApiProduct | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<ErrorInfo | null>(null);
 
   // A User only ever asks for Active rows, whatever the tab state says
   const effectiveTab: Tab = privileged ? tab : "active";
@@ -128,7 +133,7 @@ function ProductsPage() {
           menu.tiles.find((t) => t.code === "PRODUCT")?.rights ?? [],
         ),
       )
-      .catch((err) => setRightsError(errorMessage(err)));
+      .catch((err) => setRightsError(describeError(err)));
   }, [needsMenu]);
 
   // The list: asks the server again whenever the tab, search, unit or page changes.
@@ -148,10 +153,10 @@ function ProductsPage() {
           .then((res) => {
             if (stale) return;
             setData(res);
-            setListError("");
+            setListError(null);
           })
           .catch((err) => {
-            if (!stale) setListError(errorMessage(err));
+            if (!stale) setListError(describeError(err));
           });
       },
       query ? 300 : 0,
@@ -198,53 +203,72 @@ function ProductsPage() {
   };
 
   // ---------- soft delete and restore (S2-DEV-06) ----------
-  // The server refuses a delete while the product is still on a sale; its message shows in the banner.
-  const softDelete = async (p: ApiProduct) => {
-    const ok = window.confirm(
-      `Delete ${p.description} (${p.prodCode})?\n\nIt will be marked Inactive${
-        privileged ? " and can be restored later." : "."
-      }`,
-    );
-    if (!ok) return;
-    await runRowAction(
-      p.prodCode,
-      () => productApi.remove(isDemo, p.prodCode),
-      `Deleted ${p.prodCode}.`,
-    );
+  // After a row leaves the current tab, step back a page if that was the last row on it
+  const refreshAfterRowChange = () => {
+    if (
+      data &&
+      data.products.length === 1 &&
+      page > 1 &&
+      effectiveTab !== "all"
+    )
+      setPage(page - 1);
+    else reload();
   };
-  const restore = (p: ApiProduct) =>
-    runRowAction(
-      p.prodCode,
-      () => productApi.restore(isDemo, p.prodCode),
-      `Restored ${p.prodCode}.`,
-    );
 
-  const runRowAction = async (
-    code: string,
-    action: () => Promise<unknown>,
-    success: string,
-  ) => {
-    setBusyCode(code);
-    setActionError("");
+  // Delete asks first. The server refuses a delete while the product still has prices or sales;
+  // its reason shows inside the confirm dialog, so it can be read before closing.
+  const askDelete = (p: ApiProduct) => {
+    setDeleteError(null);
+    setActionError(null);
+    setNotice("");
+    setPendingDelete(p);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete || deleting) return;
+    const p = pendingDelete;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await productApi.remove(isDemo, p.prodCode);
+      setNotice(`Deleted ${p.prodCode}.`);
+      setPendingDelete(null);
+      refreshAfterRowChange();
+    } catch (err) {
+      setDeleteError(describeError(err));
+      reload(); // someone else may have changed it: show what is really there
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Restore needs no confirmation: it undoes a delete and nothing is lost
+  const restore = async (p: ApiProduct) => {
+    setBusyCode(p.prodCode);
+    setActionError(null);
     setNotice("");
     try {
-      await action();
-      setNotice(success);
-      // Removed the last row of the last page: step back so the page is not empty
-      if (
-        data &&
-        data.products.length === 1 &&
-        page > 1 &&
-        effectiveTab !== "all"
-      )
-        setPage(page - 1);
-      else reload();
+      await productApi.restore(isDemo, p.prodCode);
+      setNotice(`Restored ${p.prodCode}.`);
+      refreshAfterRowChange();
     } catch (err) {
-      setActionError(errorMessage(err));
-      reload(); // someone else may have changed it: show what is really there
+      setActionError(describeError(err));
+      reload();
     } finally {
       setBusyCode(null);
     }
+  };
+
+  const openAdd = () => {
+    setDialogError("");
+    setNotice("");
+    setDialog({ mode: "add" });
+  };
+
+  const clearFilters = () => {
+    setQuery("");
+    setUnit("");
+    setPage(1);
   };
 
   const switchPreview = (role: Role) => {
@@ -252,7 +276,7 @@ function ProductsPage() {
     setTab("active");
     setPage(1);
     setNotice("");
-    setActionError("");
+    setActionError(null);
   };
 
   const counts = data?.counts;
@@ -263,7 +287,8 @@ function ProductsPage() {
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const colCount = 5 + (privileged ? 2 : 0);
-  const loading = data === null && !error;
+  const loading = data === null && !listError;
+  const loadFailed = listError !== null && data === null;
   const filtering = query.trim() !== "" || unit !== "";
 
   return (
@@ -311,13 +336,23 @@ function ProductsPage() {
           </div>
         </div>
       )}
-      {error && (
-        <p
-          role="alert"
-          className="rounded-md bg-red-200 px-4 py-2 text-red-800"
-        >
-          {error}
-        </p>
+      {/* Error state: each message says what failed and, where it helps, how to get out */}
+      {rightsError && (
+        <ErrorBanner title={rightsError.title} message={rightsError.message} />
+      )}
+      {actionError && (
+        <ErrorBanner
+          title={actionError.title}
+          message={actionError.message}
+          onDismiss={() => setActionError(null)}
+        />
+      )}
+      {listError && data && (
+        <ErrorBanner
+          title={listError.title}
+          message={listError.message}
+          onRetry={reload}
+        />
       )}
       {notice && (
         <p
@@ -428,11 +463,7 @@ function ProductsPage() {
           {canAdd && (
             <button
               type="button"
-              onClick={() => {
-                setDialogError("");
-                setNotice("");
-                setDialog({ mode: "add" });
-              }}
+              onClick={openAdd}
               className="flex items-center gap-2 rounded-md bg-fire px-4 py-2 text-white shadow-lg hover:bg-fire-light"
             >
               <i className="fa-solid fa-plus" aria-hidden="true" />
@@ -486,15 +517,73 @@ function ProductsPage() {
                 </td>
               </tr>
             )}
-            {!loading && rows.length === 0 && (
+            {/* Error state, first load: the table itself explains and offers a retry */}
+            {loadFailed && (
               <tr className="border-t border-light-grey">
-                <td
-                  colSpan={colCount}
-                  className="px-4 py-8 text-center text-dark-grey"
-                >
-                  {filtering
-                    ? "No products match your search."
-                    : "No products found."}
+                <td colSpan={colCount}>
+                  <EmptyState
+                    icon="fa-triangle-exclamation"
+                    title="Couldn't load the products"
+                    action={
+                      <button
+                        type="button"
+                        onClick={reload}
+                        className={actionButton}
+                      >
+                        Try again
+                      </button>
+                    }
+                  >
+                    {listError.message}
+                  </EmptyState>
+                </td>
+              </tr>
+            )}
+            {/* Empty state: three different reasons, three different messages */}
+            {!loading && !loadFailed && rows.length === 0 && (
+              <tr className="border-t border-light-grey">
+                <td colSpan={colCount}>
+                  {filtering ? (
+                    <EmptyState
+                      icon="fa-magnifying-glass"
+                      title="No products match your search"
+                      action={
+                        <button
+                          type="button"
+                          onClick={clearFilters}
+                          className={actionButton}
+                        >
+                          Clear search and filter
+                        </button>
+                      }
+                    >
+                      Try a different word, or clear the search and the unit
+                      filter.
+                    </EmptyState>
+                  ) : privileged && effectiveTab === "inactive" ? (
+                    <EmptyState icon="fa-trash-can" title="No deleted products">
+                      Products you delete appear here, and can be restored.
+                    </EmptyState>
+                  ) : (
+                    <EmptyState
+                      title="No products yet"
+                      action={
+                        canAdd ? (
+                          <button
+                            type="button"
+                            onClick={openAdd}
+                            className={actionButton}
+                          >
+                            Add the first product
+                          </button>
+                        ) : undefined
+                      }
+                    >
+                      {canAdd
+                        ? "Add a product to get started."
+                        : "There are no products to show."}
+                    </EmptyState>
+                  )}
                 </td>
               </tr>
             )}
@@ -560,7 +649,7 @@ function ProductsPage() {
                       {!deleted && canDelete && (
                         <button
                           type="button"
-                          onClick={() => softDelete(p)}
+                          onClick={() => askDelete(p)}
                           disabled={busy}
                           aria-label={`Delete ${p.description}`}
                           className={dangerButton}
@@ -648,12 +737,35 @@ function ProductsPage() {
         />
       )}
 
+      {/* Confirm-delete state: nothing is deleted until the person says yes */}
+      {pendingDelete && (
+        <ConfirmDialog
+          title={`Delete ${pendingDelete.description}?`}
+          confirmLabel="Delete product"
+          busyLabel="Deleting..."
+          busy={deleting}
+          error={deleteError}
+          onConfirm={confirmDelete}
+          onCancel={() => !deleting && setPendingDelete(null)}
+        >
+          <p>
+            <b>{pendingDelete.description}</b> ({pendingDelete.prodCode}) will
+            be marked Inactive and hidden from the product list.
+          </p>
+          <p className="mt-2 text-sm text-dark-grey">
+            {privileged
+              ? "You can restore it later from the Inactive tab."
+              : "Only an Admin can see and restore it afterwards."}{" "}
+            A product that still has prices or sales cannot be deleted.
+          </p>
+        </ConfirmDialog>
+      )}
+
       {pricesFor && (
         <PriceHistoryDialog
           // key: switching the previewed role reopens the dialog with that role's view
           key={`${pricesFor.prodCode}-${viewRole}`}
           product={pricesFor}
-          privileged={privileged}
           can={priceCan}
           demo={isDemo}
           onClose={() => setPricesFor(null)}

@@ -1,16 +1,14 @@
 import { ApiError } from "./api";
 import {
   ALL_PRODUCT_RIGHTS,
-  currentEffDate,
   today,
-  type ApiPrice,
+  withStates,
   type ApiProduct,
   type Counts,
   type ListParams,
   type ListResponse,
   type PriceListResponse,
   type Status,
-  type Tab,
 } from "./products";
 import type { Role } from "./roles";
 import type { Unit } from "./units";
@@ -20,8 +18,6 @@ import type { Unit } from "./units";
 // rows as the Student Guide screenshots). Changes live in this browser tab and reset on refresh.
 // Every demo function throws the same ApiError the server would, so the screens cannot tell them apart.
 // ===========================================================================
-
-export type DemoPrice = ApiPrice & { prodCode: string };
 
 export const demoProducts: ApiProduct[] = [
   {
@@ -61,56 +57,20 @@ export const demoProducts: ApiProduct[] = [
   },
 ];
 
+// The price history table has no status or stamp: a deleted price is really gone (like the server).
+export type DemoPrice = {
+  prodCode: string;
+  effDate: string;
+  unitPrice: number;
+};
+
 export const demoPrices: DemoPrice[] = [
-  {
-    prodCode: "IW0001",
-    effDate: "2025-01-01",
-    unitPrice: 11,
-    status: "Inactive",
-    stamp: "DELETED user2 2026-10-13 1:01 PM",
-  },
-  {
-    prodCode: "IW0001",
-    effDate: "2025-06-01",
-    unitPrice: 12.5,
-    status: "Active",
-    stamp: "CREATED system 2025-06-01 9:00 AM",
-  },
-  {
-    prodCode: "IW0001",
-    effDate: "2026-01-01",
-    unitPrice: 13.75,
-    status: "Active",
-    stamp: "CREATED system 2026-01-01 9:00 AM",
-  },
-  {
-    prodCode: "IW0001",
-    effDate: "2027-01-01",
-    unitPrice: 14.5,
-    status: "Active",
-    stamp: "CREATED user1 2026-10-20 2:15 PM",
-  },
-  {
-    prodCode: "SB0002",
-    effDate: "2026-01-01",
-    unitPrice: 48.5,
-    status: "Active",
-    stamp: "CREATED system 2026-10-02 10:00 AM",
-  },
-  {
-    prodCode: "LO0003",
-    effDate: "2026-02-01",
-    unitPrice: 28,
-    status: "Active",
-    stamp: "CREATED system 2026-02-01 10:00 AM",
-  },
-  {
-    prodCode: "CW0005",
-    effDate: "2026-01-01",
-    unitPrice: 2.35,
-    status: "Active",
-    stamp: "CREATED system 2026-10-05 3:00 PM",
-  },
+  { prodCode: "IW0001", effDate: "2025-06-01", unitPrice: 12.5 },
+  { prodCode: "IW0001", effDate: "2026-01-01", unitPrice: 13.75 },
+  { prodCode: "IW0001", effDate: "2027-01-01", unitPrice: 14.5 }, // upcoming
+  { prodCode: "SB0002", effDate: "2026-01-01", unitPrice: 48.5 },
+  { prodCode: "LO0003", effDate: "2026-02-01", unitPrice: 28 },
+  { prodCode: "CW0005", effDate: "2026-01-01", unitPrice: 2.35 },
 ];
 
 // What each previewed role is granted in the demo (a User gets no Delete rights, so you can see them hidden)
@@ -133,18 +93,18 @@ export const demoFail = (
   message: string,
   status = 409,
   errors?: Record<string, string>,
+  code?: string,
 ): never => {
-  throw new ApiError(message, status, undefined, errors);
+  throw new ApiError(message, status, code, errors);
 };
 
 export const demoStamp = (action: string) =>
   `${action} demo ${today()} ${new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
 
-export const demoCurrentPrice = (prodCode: string) => {
-  const own = demoPrices.filter((p) => p.prodCode === prodCode);
-  const eff = currentEffDate(own);
-  return eff ? own.find((p) => p.effDate === eff)!.unitPrice : null;
-};
+export const demoCurrentPrice = (prodCode: string) =>
+  withStates(demoPrices.filter((p) => p.prodCode === prodCode)).find(
+    (p) => p.state === "Current",
+  )?.unitPrice ?? null;
 
 export const demoFindProduct = (prodCode: string) =>
   demoProducts.find((p) => p.prodCode === prodCode) ??
@@ -215,6 +175,18 @@ export const demoProductUpdate = (
 
 export const demoProductSetStatus = (prodCode: string, status: Status) => {
   const p = demoFindProduct(prodCode);
+  if (status === "Inactive") {
+    // Same rule as the server: a product that still has price records cannot be deleted
+    const prices = demoPrices.filter((x) => x.prodCode === prodCode).length;
+    if (prices > 0) {
+      demoFail(
+        `${prodCode} cannot be deleted: it still has ${prices} price record${prices === 1 ? "" : "s"}.`,
+        409,
+        undefined,
+        "HAS_ACTIVE_CHILDREN",
+      );
+    }
+  }
   p.status = status;
   p.stamp = demoStamp(status === "Inactive" ? "DELETED" : "RESTORED");
 };
@@ -227,27 +199,11 @@ export const demoActiveProduct = (prodCode: string) => {
     );
 };
 
-export const demoPriceList = (
-  prodCode: string,
-  status: Tab,
-): PriceListResponse => {
-  const own = demoPrices
-    .filter((p) => p.prodCode === prodCode)
-    .sort((a, b) => b.effDate.localeCompare(a.effDate));
-  const shown = own.filter(
-    (p) =>
-      status === "all" ||
-      p.status === (status === "active" ? "Active" : "Inactive"),
-  );
+export const demoPriceList = (prodCode: string): PriceListResponse => {
+  demoFindProduct(prodCode);
   return {
     ok: true,
-    prices: shown.map((p) => ({
-      effDate: p.effDate,
-      unitPrice: p.unitPrice,
-      status: p.status,
-      stamp: p.stamp,
-    })),
-    counts: demoCounts(own),
+    prices: withStates(demoPrices.filter((p) => p.prodCode === prodCode)),
   };
 };
 
@@ -265,15 +221,10 @@ export const demoPriceAdd = (
       (p) => p.prodCode === prodCode && p.effDate === body.effDate,
     )
   ) {
-    const message = `This product already has a price effective ${body.effDate} (a deleted price keeps its date).`;
-    demoFail(message, 409, { effDate: message });
+    const message = `${prodCode} already has a price starting ${body.effDate}. Edit that one or pick another date.`;
+    demoFail(message, 409, { effectiveDate: message }, "DATE_TAKEN");
   }
-  demoPrices.push({
-    prodCode,
-    ...body,
-    status: "Active",
-    stamp: demoStamp("CREATED"),
-  });
+  demoPrices.push({ prodCode, ...body });
 };
 
 export const demoPriceUpdate = (
@@ -282,19 +233,15 @@ export const demoPriceUpdate = (
   body: { unitPrice: number },
 ) => {
   demoActiveProduct(prodCode);
-  const p = demoFindPrice(prodCode, effDate);
-  if (p.status === "Inactive")
-    demoFail("This price was deleted. Restore it before editing.");
-  Object.assign(p, body, { stamp: demoStamp("EDITED") });
+  Object.assign(demoFindPrice(prodCode, effDate), body);
 };
 
-export const demoPriceSetStatus = (
-  prodCode: string,
-  effDate: string,
-  status: Status,
-) => {
+// A price is really removed (there is no restore), exactly like DELETE on the server
+export const demoPriceRemove = (prodCode: string, effDate: string) => {
   demoActiveProduct(prodCode);
-  const p = demoFindPrice(prodCode, effDate);
-  p.status = status;
-  p.stamp = demoStamp(status === "Inactive" ? "DELETED" : "RESTORED");
+  demoFindPrice(prodCode, effDate);
+  const i = demoPrices.findIndex(
+    (p) => p.prodCode === prodCode && p.effDate === effDate,
+  );
+  demoPrices.splice(i, 1);
 };

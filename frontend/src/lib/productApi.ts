@@ -1,27 +1,28 @@
 import { api } from "./api";
-import * as demoStore from "./demoProducts";
+import * as demoStore from "../lib/demoProducts";
 import type {
   ListParams,
   ListResponse,
   PriceListResponse,
-  Tab,
+  PriceState,
 } from "./products";
 import type { Unit } from "./units";
 
 // ===========================================================================
-// API calls. `demo` picks the sample data above or the real server.
+// API calls. `demo` picks the sample data (lib/demoProducts.ts) or the real server.
 //
-// Back-end routes this screen expects. The first four exist today; the rest are the next stories
-// (soft delete, restore, prices) and follow the same shape as the customer routes:
-//   GET    /api/products?status=&search=&unit=&page=&pageSize=   (add currentPrice and stamp)
-//   POST   /api/products          PATCH /api/products/:prodCode
-//   DELETE /api/products/:prodCode            needs PRODUCT_DELETE
-//   PATCH  /api/products/:prodCode/restore    needs PRODUCT_DELETE
-//   GET    /api/products/:prodCode/prices?status=      -> { ok, prices, counts }
-//   POST   /api/products/:prodCode/prices      { effDate, unitPrice }          needs PRICE_ADD
-//   PATCH  /api/products/:prodCode/prices/:effDate   { unitPrice }             needs PRICE_EDIT
-//   DELETE /api/products/:prodCode/prices/:effDate                             needs PRICE_DELETE
-//   PATCH  /api/products/:prodCode/prices/:effDate/restore                     needs PRICE_DELETE
+// Routes used (backend/src/routes/product.routes.js):
+//   GET    /api/products?status=&search=&unit=&page=&pageSize=
+//   POST   /api/products                          needs PRODUCT_ADD
+//   PATCH  /api/products/:prodCode                needs PRODUCT_EDIT
+//   DELETE /api/products/:prodCode                needs PRODUCT_DELETE (soft delete; refused with
+//                                                 409 HAS_ACTIVE_CHILDREN while it has prices or sales)
+//   PATCH  /api/products/:prodCode/restore        needs PRODUCT_DELETE
+//   GET    /api/products/:prodCode/prices         -> { product, currentPrice, prices, total }
+//   POST   /api/products/:prodCode/prices         { effectiveDate, unitPrice }   needs PRICE_ADD
+//   PATCH  /api/products/:prodCode/prices/:effDate  { unitPrice }                needs PRICE_EDIT
+//   DELETE /api/products/:prodCode/prices/:effDate                               needs PRICE_DELETE
+//          (a price is REALLY removed: there is no soft delete and no restore for prices)
 // ===========================================================================
 
 export const productApi = {
@@ -73,11 +74,29 @@ export const productApi = {
       : api(`/api/products/${code}/restore`, { method: "PATCH" }),
 };
 
+// A price row as the server sends it. The screen calls the date effDate, so it is renamed here.
+type ServerPrice = {
+  effectiveDate: string;
+  unitPrice: number | string;
+  state?: PriceState;
+};
+
 export const priceApi = {
-  list: (demo: boolean, code: string, status: Tab) =>
+  list: (demo: boolean, code: string) =>
     demo
-      ? demoStore.later(() => demoStore.demoPriceList(code, status))
-      : api<PriceListResponse>(`/api/products/${code}/prices?status=${status}`),
+      ? demoStore.later(() => demoStore.demoPriceList(code))
+      : api<{ ok: true; prices: ServerPrice[] }>(
+          `/api/products/${code}/prices`,
+        ).then(
+          (res): PriceListResponse => ({
+            ok: true,
+            prices: res.prices.map((p) => ({
+              effDate: p.effectiveDate,
+              unitPrice: p.unitPrice,
+              state: p.state,
+            })),
+          }),
+        ),
   add: (
     demo: boolean,
     code: string,
@@ -85,7 +104,9 @@ export const priceApi = {
   ) =>
     demo
       ? demoStore.later(() => demoStore.demoPriceAdd(code, body))
-      : api(`/api/products/${code}/prices`, { body }),
+      : api(`/api/products/${code}/prices`, {
+          body: { effectiveDate: body.effDate, unitPrice: body.unitPrice },
+        }),
   update: (
     demo: boolean,
     code: string,
@@ -98,18 +119,9 @@ export const priceApi = {
           method: "PATCH",
           body,
         }),
+  /** Permanent: there is no restore for prices */
   remove: (demo: boolean, code: string, effDate: string) =>
     demo
-      ? demoStore.later(() =>
-          demoStore.demoPriceSetStatus(code, effDate, "Inactive"),
-        )
+      ? demoStore.later(() => demoStore.demoPriceRemove(code, effDate))
       : api(`/api/products/${code}/prices/${effDate}`, { method: "DELETE" }),
-  restore: (demo: boolean, code: string, effDate: string) =>
-    demo
-      ? demoStore.later(() =>
-          demoStore.demoPriceSetStatus(code, effDate, "Active"),
-        )
-      : api(`/api/products/${code}/prices/${effDate}/restore`, {
-          method: "PATCH",
-        }),
 };

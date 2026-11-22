@@ -18,12 +18,16 @@ export type ApiProduct = {
   stamp?: string;
 };
 
-// One price row (GET /api/products/:prodCode/prices).
+// Where a price sits in time, worked out by the server (price.repository.js):
+// Current = in effect today, Upcoming = starts later, Past = replaced by a newer one.
+export type PriceState = "Current" | "Upcoming" | "Past";
+
+// One price row. The price history table has no soft delete, so a price has no status or
+// stamp: deleting one really removes it (price.repository.js).
 export type ApiPrice = {
   effDate: string; // YYYY-MM-DD
   unitPrice: number | string;
-  status: Status;
-  stamp?: string;
+  state?: PriceState;
 };
 
 export type Tab = "active" | "inactive" | "all";
@@ -41,7 +45,6 @@ export type ListResponse = {
 export type PriceListResponse = {
   ok: true;
   prices: ApiPrice[];
-  counts: Counts;
 };
 
 export type MenuResponse = {
@@ -118,14 +121,30 @@ export const today = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
-// The current price is derived, never stored: the active row with the latest effective date
-// that is not in the future (Student Guide, section 3.4).
-export const currentEffDate = (prices: ApiPrice[]) =>
-  prices
-    .filter((p) => p.status === "Active" && p.effDate <= today())
-    .map((p) => p.effDate)
+// The current price is derived, never stored: the row with the latest effective date that is
+// not in the future (Student Guide, section 3.4). The server does this for real data; the demo
+// data uses this helper so it behaves the same way.
+export const withStates = (
+  rows: { effDate: string; unitPrice: number | string }[],
+): ApiPrice[] => {
+  const now = today();
+  const currentDate = rows
+    .map((r) => r.effDate)
+    .filter((d) => d <= now)
     .sort()
-    .at(-1) ?? null;
+    .at(-1);
+  return [...rows]
+    .sort((a, b) => b.effDate.localeCompare(a.effDate))
+    .map((r) => ({
+      ...r,
+      state:
+        r.effDate > now
+          ? "Upcoming"
+          : r.effDate === currentDate
+            ? "Current"
+            : "Past",
+    }));
+};
 
 // First error the server found, field messages first (e.g. "Description is required.")
 export const saveMessage = (err: unknown) => {
