@@ -3,8 +3,7 @@ import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import background from "../assets/group.jpg";
 import TextField from "../components/TextField";
-import GoogleButton from "../components/GoogleButton";
-import OrDivider from "../components/OrDivider";
+import GoogleSignIn from "../components/GoogleSignIn";
 import Alert from "../components/Alert";
 import { api, ApiError, errorMessage } from "../lib/api";
 
@@ -63,7 +62,7 @@ function RegisterPage() {
           <h1 id="register-heading" className="text-2xl font-bold">
             Create your Hope <span className="text-fire">ERP</span> account
           </h1>
-          <p className="mt-2 text-md text-dark-grey">
+          <p className="mt-2 text-base text-dark-grey">
             Enter your details to get started for free.
           </p>
         </header>
@@ -76,7 +75,7 @@ function RegisterPage() {
             </Alert>
             <Link
               to="/login"
-              className="px-4 py-2 text-center bg-fire text-white rounded-md shadow-lg hover:bg-fire-light"
+              className="px-4 py-2 text-center bg-fire text-white rounded-md shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light"
             >
               Back to log in
             </Link>
@@ -126,16 +125,15 @@ function RegisterPage() {
               <button
                 type="submit"
                 disabled={busy}
-                className="px-4 py-2 bg-fire text-white rounded-md shadow-lg hover:bg-fire-light disabled:opacity-60"
+                className="px-4 py-2 bg-fire text-white rounded-md shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light disabled:opacity-60"
               >
                 {busy ? "Sending..." : "Register"}
               </button>
 
-              <OrDivider />
-              <GoogleButton />
+              <GoogleSignIn />
             </form>
 
-            <footer className="mt-6 text-md text-dark-grey">
+            <footer className="mt-6 text-base text-dark-grey">
               <p>
                 Already have an account?{" "}
                 <Link to="/login" className="text-fire underline">

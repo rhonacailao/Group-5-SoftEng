@@ -60,6 +60,21 @@ export async function resetDb() {
   outbox.length = 0;
 }
 
+// Karla's base migration: the Hope Inc. business tables (customer, product, employee, sales ...)
+// with the sample rows. Call it after resetDb() in tests that read or write those tables.
+// Then Karla's soft-delete column and active views for customer and product.
+export async function loadBusinessTables() {
+  for (const file of ['20261028034011_hopeDB_audit.sql', '20261115131700_customer_product_active_views.sql']) {
+    await db.exec(fs.readFileSync(path.join(migrationsDir, file), 'utf8'));
+  }
+}
+
+// Karla's audit triggers (S1-DBA-06): after this, every insert/update on the business tables
+// writes a row to audit_log with the user from app.username. Call it after loadBusinessTables().
+export async function loadAuditTriggers() {
+  await db.exec(fs.readFileSync(path.join(migrationsDir, '20261108014500_auditUserTracking.sql'), 'utf8'));
+}
+
 export async function startApp() {
   setPool(makePool());
   await resetDb();
@@ -108,6 +123,7 @@ export function client(base) {
     post: (u, b = {}) => call('POST', u, b),
     patch: (u, b = {}) => call('PATCH', u, b),
     put: (u, b = {}) => call('PUT', u, b),
+    delete: (u) => call('DELETE', u),
     login: (email, password = 'Passw0rd!x') => call('POST', '/api/auth/login', { email, password }),
     get cookie() { return cookie; },
   };

@@ -1,13 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import TextField from "./TextField";
 
-export type PayTerm = "COD" | "30D" | "45D";
-
-export const payTermLabels: Record<PayTerm, string> = {
-  COD: "COD",
-  "30D": "Net 30",
-  "45D": "Net 45",
-};
+import { payTermLabels, type PayTerm } from "../lib/payTerms";
 
 export type CustomerValues = {
   custname: string;
@@ -22,10 +16,21 @@ type CustomerDialogProps = {
   initial?: CustomerValues;
   onSave: (values: CustomerValues) => void;
   onClose: () => void;
+  /** Message from the server (e.g. "Customer name is required."), shown above the buttons */
+  error?: string;
+  /** True while the request is running, so the form cannot be sent twice */
+  busy?: boolean;
 };
 
 /** Add or edit a customer. Status and Stamp are filled in by the system, so they are not here. */
-function CustomerDialog({ custno, initial, onSave, onClose }: CustomerDialogProps) {
+function CustomerDialog({
+  custno,
+  initial,
+  onSave,
+  onClose,
+  error,
+  busy = false,
+}: CustomerDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const [values, setValues] = useState<CustomerValues>(
     initial ?? { custname: "", address: "", payterm: "30D" },
@@ -67,46 +72,68 @@ function CustomerDialog({ custno, initial, onSave, onClose }: CustomerDialogProp
             label="Customer name"
             maxLength={20}
             value={values.custname}
-            onChange={(e) => setValues((v) => ({ ...v, custname: e.target.value }))}
+            onChange={(e) =>
+              setValues((v) => ({ ...v, custname: e.target.value }))
+            }
           />
           <TextField
             id="address"
             label="Address"
             maxLength={50}
             value={values.address}
-            onChange={(e) => setValues((v) => ({ ...v, address: e.target.value }))}
+            onChange={(e) =>
+              setValues((v) => ({ ...v, address: e.target.value }))
+            }
           />
           <div className="flex flex-col gap-1">
             <label htmlFor="payterm" className="text-md font-semibold">
               Pay terms
             </label>
-            <select
-              id="payterm"
-              name="payterm"
-              value={values.payterm}
-              onChange={(e) => setValues((v) => ({ ...v, payterm: e.target.value as PayTerm }))}
-              className="w-full rounded-sm border border-dark-grey bg-white px-4 py-2 text-dark shadow-lg focus:outline-none focus:ring-2 focus:ring-fire-light"
-            >
-              {(Object.keys(payTermLabels) as PayTerm[]).map((p) => (
-                <option key={p} value={p}>
-                  {payTermLabels[p]}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                id="payterm"
+                name="payterm"
+                value={values.payterm}
+                onChange={(e) =>
+                  setValues((v) => ({
+                    ...v,
+                    payterm: e.target.value as PayTerm,
+                  }))
+                }
+                className="w-full appearance-none rounded-full bg-[#e0d3ca] py-2 pl-4 pr-11 text-dark focus:outline-none focus:ring-2 focus:ring-fire-light"
+              >
+                {(Object.keys(payTermLabels) as PayTerm[]).map((p) => (
+                  <option key={p} value={p}>
+                    {payTermLabels[p]}
+                  </option>
+                ))}
+              </select>
+              <i
+                className="fa-solid fa-chevron-down pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-dark-grey"
+                aria-hidden="true"
+              />
+            </div>
           </div>
         </div>
+
+        {error && (
+          <p role="alert" className="px-6 pb-2 text-sm text-red-800">
+            {error}
+          </p>
+        )}
 
         <footer className="flex justify-end gap-3 border-t border-light-grey p-6">
           <button
             type="button"
             onClick={() => ref.current?.close()}
-            className="rounded-md border border-light-grey bg-white px-4 py-2 hover:bg-light-grey"
+            className="rounded-md border border-light-grey bg-white px-4 py-2 transition-colors duration-200 ease-in-out hover:bg-light-grey"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="rounded-md bg-fire px-4 py-2 text-white shadow-lg hover:bg-fire-light"
+            disabled={busy}
+            className="rounded-md bg-fire px-4 py-2 text-white shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light disabled:opacity-60"
           >
             {editing ? "Save changes" : "Add customer"}
           </button>

@@ -1,0 +1,21 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DBA-03
+Task Name: Validation constraints (payTerms, unit)
+Assigned Team Member: Karla Mae Ibuig (DB Admin)
+Sprint / Week: Sprint 2 / Week 3
+Objective: Implement database-level CHECK and validation constraints on payTerms and unit fields to enforce data integrity and prevent invalid entries.
+
+Test Case ID: TC-S2-DBA-03
+Test Component: Database Validation Constraints (payTerms, unit)
+Test Description: Verify that database constraints strictly enforce valid values for payTerms and unit columns, rejecting null, negative, or out-of-domain inputs.
+
+Test Steps:
+-Attempt to INSERT and UPDATE records using valid payTerms and unit values; verify successful execution.
+-Attempt to INSERT and UPDATE records using invalid, negative, or malformed payTerms and unit inputs.
+-Confirm that PostgreSQL raises a constraint violation error and blocks the invalid transaction.
+
+Expected Result: Valid records are accepted, while invalid payTerms and unit values are strictly rejected at the database layer.
+Actual Result: Validation constraints on payTerms and unit verified against both valid and invalid data payloads.
+Result : (CodeSCR\TC-S2-DBA-03.png)
+Status: PASS ✅

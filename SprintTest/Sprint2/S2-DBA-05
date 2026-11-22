@@ -1,0 +1,23 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DBA-05
+Task Name: Demo data for customer, product, price history
+Assigned Team Member: Karla Mae Ibuig (DB Admin)
+Sprint / Week: Sprint 2 / Week 4
+Objective: Populate clean, realistic demonstration seed records across public.customer, public.product, 
+and public.pricehist adhering to all active validation constraints (pay_ck, unit_ck, column length limits).
+
+Test Case ID: TC-S2-DBA-05
+Test Component: Demo Data Seeding (customer, product, pricehist) (S2-DBA-05)
+Test Description: Verify that demo seed records exist in public.customer, public.product, and public.pricehist, 
+conform to pay_ck and unit_ck constraints, and appear properly in public.active_customers and public.active_products
+
+Test Steps:
+-Query public.active_customers, public.active_products, and public.pricehist to inspect the seeded demo records.
+-Verify that all demo payterm values match 'COD', '30D', or '45D' and all demo unit values match 'pc', 'ea', 'mtr', 'pkg', or 'ltr'.
+-Confirm that each demo product links cleanly to valid historical pricing entries in public.pricehist.
+
+Expected Result: Demo records populate all three tables without constraint violations and render accurately in active database views.
+Actual Result: Demo data for customer, product, and pricehist verified across base tables and active views.
+
+Status: PASS ✅

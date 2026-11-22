@@ -24,7 +24,7 @@ export class ApiError extends Error {
   }
 }
 
-type ApiOptions = { method?: "GET" | "POST" | "PATCH"; body?: unknown };
+type ApiOptions = { method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE"; body?: unknown };
 
 export async function api<T = { ok: true }>(path: string, options: ApiOptions = {}): Promise<T> {
   const hasBody = options.body !== undefined;

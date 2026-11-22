@@ -39,7 +39,8 @@ function SetPasswordPage() {
     } catch (err) {
       setError(errorMessage(err));
       // Invalid, used or expired link: the user needs a new one
-      if (err instanceof ApiError && err.code?.startsWith("TOKEN_")) setBadLink(true);
+      if (err instanceof ApiError && err.code?.startsWith("TOKEN_"))
+        setBadLink(true);
     } finally {
       setBusy(false);
     }
@@ -69,7 +70,7 @@ function SetPasswordPage() {
           </Alert>
           <Link
             to="/login"
-            className="px-4 py-2 text-center bg-fire text-white rounded-md shadow-lg hover:bg-fire-light"
+            className="px-4 py-2 text-center bg-fire text-white rounded-md shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light"
           >
             Go to log in
           </Link>
@@ -81,7 +82,7 @@ function SetPasswordPage() {
           </Alert>
           <Link
             to="/forgot-password"
-            className="px-4 py-2 text-center bg-fire text-white rounded-md shadow-lg hover:bg-fire-light"
+            className="px-4 py-2 text-center bg-fire text-white rounded-md shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light"
           >
             Request a new link
           </Link>
@@ -119,7 +120,7 @@ function SetPasswordPage() {
           <button
             type="submit"
             disabled={busy}
-            className="px-4 py-2 bg-fire text-white rounded-md shadow-lg hover:bg-fire-light disabled:opacity-60"
+            className="px-4 py-2 bg-fire text-white rounded-md shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light disabled:opacity-60"
           >
             {busy ? "Saving..." : "Save password"}
           </button>

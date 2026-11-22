@@ -1,0 +1,15 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Test Case ID: TC-S2-DEV-03
+Test Component: Customer Soft Delete & Restore (S2-DEV-03)
+Test Description: Verify that soft-deleting a customer sets deleted_at and removes them from the active customer list, 
+and restoring clears deleted_at to return them to active status.
+
+Test Steps:
+-Trigger the soft-delete action on an active customer record and confirm it disappears from the active Customer List (public.active_customers).   
+-Switch to the archived/deleted filter view and verify the soft-deleted customer is still preserved in public.customer with a non-null deleted_at timestamp.   
+-Trigger the restore action on the archived customer and confirm deleted_at resets to NULL and the customer reappears in the active list.
+
+Expected Result: Soft-deleted customers are excluded from active views while remaining recoverable, and restored customers return to active status cleanly.
+Actual Result: Customer soft delete and restore workflows implemented and verified successfully.
+Status: PASS ✅

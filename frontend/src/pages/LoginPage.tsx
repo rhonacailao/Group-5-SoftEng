@@ -3,11 +3,15 @@ import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthSplitLayout from "../components/AuthSplitLayout";
 import TextField from "../components/TextField";
-import GoogleButton from "../components/GoogleButton";
-import OrDivider from "../components/OrDivider";
+import GoogleSignIn from "../components/GoogleSignIn";
 import Alert from "../components/Alert";
 import { errorMessage } from "../lib/api";
-import { DEMO_EMAIL, DEMO_ENABLED, DEMO_PASSWORD, useAuthStore } from "../store/authStore";
+import {
+  DEMO_EMAIL,
+  DEMO_ENABLED,
+  DEMO_PASSWORD,
+  useAuthStore,
+} from "../store/authStore";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -72,7 +76,7 @@ function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <p className="text-md">
+        <p className="text-base">
           <Link to="/forgot-password" className="text-fire underline">
             Forgot password?
           </Link>
@@ -87,13 +91,12 @@ function LoginPage() {
         <button
           type="submit"
           disabled={busy}
-          className="px-4 py-2 bg-fire text-white rounded-md shadow-lg hover:bg-fire-light disabled:opacity-60"
+          className="px-4 py-2 bg-fire text-white rounded-md shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light disabled:opacity-60"
         >
           {busy ? "Logging in..." : "Log in"}
         </button>
 
-        <OrDivider />
-        <GoogleButton />
+        <GoogleSignIn />
 
         {DEMO_ENABLED && (
           <p className="text-center text-sm text-dark-grey">

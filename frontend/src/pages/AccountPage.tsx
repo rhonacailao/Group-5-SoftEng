@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import Card from "../components/Card";
 
 function AccountPage() {
   const navigate = useNavigate();
@@ -30,9 +31,10 @@ function AccountPage() {
         <h1 className="text-5xl font-bold leading-none">My account</h1>
       </header>
 
-      <section
+      <Card
+        as="section"
         aria-labelledby="profile-heading"
-        className="flex flex-col gap-6 rounded-xl bg-paper p-6"
+        className="flex flex-col gap-6 p-6"
       >
         <header className="flex items-center gap-4">
           <span className="flex h-16 w-16 items-center justify-center rounded-full bg-fire text-2xl font-bold text-white">
@@ -66,11 +68,12 @@ function AccountPage() {
             </div>
           ))}
         </dl>
-      </section>
+      </Card>
 
-      <section
+      <Card
+        as="section"
         aria-labelledby="security-heading"
-        className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-paper p-6"
+        className="flex flex-wrap items-center justify-between gap-4 p-6"
       >
         <div>
           <h2 id="security-heading" className="text-2xl font-bold">
@@ -83,19 +86,19 @@ function AccountPage() {
         <div className="flex gap-3">
           <Link
             to="/forgot-password"
-            className="px-4 py-2 bg-fire text-white rounded-md shadow-lg hover:bg-fire-light"
+            className="px-4 py-2 bg-fire text-white rounded-md shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light"
           >
             Change password
           </Link>
           <button
             type="button"
             onClick={handleLogout}
-            className="px-4 py-2 bg-white text-dark rounded-md shadow-lg border border-light-grey hover:bg-light-grey"
+            className="px-4 py-2 bg-white text-dark rounded-md shadow-lg border border-light-grey transition-colors duration-200 ease-in-out hover:bg-light-grey"
           >
             Log out
           </button>
         </div>
-      </section>
+      </Card>
     </div>
   );
 }

@@ -17,7 +17,10 @@ function ProtectedRoute() {
         role="status"
         className="flex min-h-screen items-center justify-center bg-cream text-fire"
       >
-        <i className="fa-solid fa-spinner fa-spin text-3xl" aria-hidden="true" />
+        <i
+          className="fa-solid fa-spinner fa-spin text-3xl"
+          aria-hidden="true"
+        />
         <span className="sr-only">Loading...</span>
       </div>
     );
