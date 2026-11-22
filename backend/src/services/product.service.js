@@ -115,7 +115,7 @@ function parseProdCode(raw) {
 
 // GET /api/products/:prodCode : fills the edit form
 export async function get(rawProdCode) {
-  const product = await products.findByCode(parseProdCode(rawProdCode));
+  const product = await products.findByCode(parseProdCode(rawProdCode), undefined, { withPrice: true });
   if (!product) throw new HttpError(404, 'Product not found');
   return product;
 }

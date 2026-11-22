@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js';
+import { businessTimeZone, todaySql } from '../config/business.js';
 
 // S2-DEV-04: reads Karla's product table (prodcode, description, unit).
 // "Active" or "Inactive" comes from her soft-delete column deleted_at
@@ -10,25 +11,55 @@ const STATUS_SQL = {
   all: 'TRUE',
 };
 
+// S2-DEV-08: joins each product with its current price (the newest price that has already started
+// today, in the company time zone). LEFT JOIN, so a product with no price still shows up.
+const CURRENT_PRICE_JOIN = (tzPlaceholder) => `
+  LEFT JOIN LATERAL (
+    SELECT to_char(h.effdate, 'YYYY-MM-DD') AS eff, h.unitprice
+      FROM pricehist h
+     WHERE h.prodcode = p.prodcode AND h.effdate <= ${todaySql(tzPlaceholder)}
+     ORDER BY h.effdate DESC
+     LIMIT 1
+  ) cp ON TRUE`;
+
 function toProduct(row) {
   return {
     prodCode: row.prodcode,
     description: (row.description ?? '').trim(), // the sample data has stray spaces at the end
     unit: row.unit, // pc, ea, mtr, pkg or ltr
     status: row.deleted_at ? 'Inactive' : 'Active',
+    // S2-DEV-08: only the screens that show prices (list and one product) select these columns.
+    // currentPrice = the price whose effective date is the latest one that is not in the future;
+    // null when the product has no price in effect yet.
+    ...('price_eff' in row
+      ? {
+          currentPrice: row.price_eff === null
+            ? null
+            : { unitPrice: Number(row.price_value), effectiveDate: row.price_eff },
+        }
+      : {}),
   };
 }
 
 // S2-DEV-05: one product by code (null when there is none), deleted ones included.
 // lock = true keeps other writers waiting until this transaction ends (used before an edit).
-export async function findByCode(prodCode, db = pool, { lock = false } = {}) {
-  const { rows } = await db.query(
-    `SELECT prodcode, description, unit, deleted_at
-       FROM product
-      WHERE prodcode = $1
-      ${lock ? 'FOR UPDATE' : ''}`,
-    [prodCode],
-  );
+// withPrice = true also fetches the current price (S2-DEV-08). It cannot be combined with lock.
+export async function findByCode(prodCode, db = pool, { lock = false, withPrice = false } = {}) {
+  const { rows } = withPrice
+    ? await db.query(
+        `SELECT p.prodcode, p.description, p.unit, p.deleted_at, cp.eff AS price_eff, cp.unitprice AS price_value
+           FROM product p
+           ${CURRENT_PRICE_JOIN('$2')}
+          WHERE p.prodcode = $1`,
+        [prodCode, businessTimeZone()],
+      )
+    : await db.query(
+        `SELECT prodcode, description, unit, deleted_at
+           FROM product
+          WHERE prodcode = $1
+          ${lock ? 'FOR UPDATE' : ''}`,
+        [prodCode],
+      );
   return rows[0] ? toProduct(rows[0]) : null;
 }
 
@@ -126,13 +157,15 @@ export async function list({ search, unit, status, limit, offset }, db = pool) {
   if (total === 0 || offset >= total) return { products: [], total, counts };
 
   const filters = [...where, STATUS_SQL[status]].join(' AND ');
+  const tzSql = add(businessTimeZone());
   const limitSql = add(limit);
   const offsetSql = add(offset);
   const { rows } = await db.query(
-    `SELECT prodcode, description, unit, deleted_at
-       FROM product
+    `SELECT p.prodcode, p.description, p.unit, p.deleted_at, cp.eff AS price_eff, cp.unitprice AS price_value
+       FROM product p
+       ${CURRENT_PRICE_JOIN(tzSql)}
       WHERE ${filters}
-      ORDER BY prodcode
+      ORDER BY p.prodcode
       LIMIT ${limitSql} OFFSET ${offsetSql}`,
     params,
   );

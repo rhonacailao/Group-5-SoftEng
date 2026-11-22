@@ -309,7 +309,7 @@ describe('S2-DEV-05 get one product (fills the edit form)', () => {
     await db.query(`UPDATE product SET deleted_at = now() WHERE prodcode = 'AD0002'`);
     const r = await c.get('/api/products/ad0002');
     assert.equal(r.status, 200);
-    assert.deepEqual(Object.keys(r.body.product), ['prodCode', 'description', 'unit', 'status']);
+    assert.deepEqual(Object.keys(r.body.product), ['prodCode', 'description', 'unit', 'status', 'currentPrice']);
     assert.equal(r.body.product.status, 'Inactive');
   });
 
