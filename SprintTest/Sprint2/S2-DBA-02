@@ -1,0 +1,22 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DBA-02
+Task Name: Query: current price as of a given date
+Assigned Team Member: Karla Mae Ibuig (DB Admin)
+Sprint / Week: Sprint 2 / Week 3
+Objective: Develop and optimize a SQL query/function to accurately retrieve the active product price effective as of any specified historical or current date.
+
+Test Case ID: TC-S2-DBA-02
+Test Component: Effective Date Product Pricing Query
+Test Description: Verify that the pricing query accurately retrieves the valid unit price for a product based on a given target date across multiple historical price changes.
+
+Test Steps:
+-Insert test product pricing records with distinct effective date ranges.
+-Execute the pricing query passing past, boundary, and current dates.
+-Compare returned prices against expected historical pricing intervals.
+
+Expected Result: The query consistently returns the exact effective price corresponding to the specified target date without overlapping or null results.
+Actual Result: Effective-date product pricing query validated across boundary and historical test dates.
+Result : (CodeSCR\TC-S2-DBA-02.png)
+Status: PASS ✅
+

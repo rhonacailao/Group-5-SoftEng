@@ -1,0 +1,26 @@
+
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DBA-01
+Task Name: Customer and product active views, indexes   
+Assigned Team Member: Karla Mae Ibuig (DB Admin)
+Sprint / Week: Sprint 2 / Week 3
+Objective: Create database views filtering active customer and product records, alongside establishing appropriate 
+indexes to optimize query performance across the HOPE, Inc. ERP database.
+
+
+Test Case ID: TC-S2-DBA-01
+Test Component: Customer and Product Active Views & Indexes
+Test Description: Verify that database views accurately filter active customers and products 
+while excluding inactive/archived records, and confirm that indexes are applied to optimize query execution.
+Test Steps:
+-Execute SELECT queries against the active customer and product views in the database.
+-Verify that only records flagged as active are returned in the result sets.
+-Inspect table metadata/execution plans (EXPLAIN) to confirm that indexes are created and utilized on key lookup columns.
+
+Expected Result: Active views accurately isolate active entities, and database indexes improve lookup efficiency without errors.
+Actual Result: Active customer and product views along with performance indexes created and verified successfully.
+Result : (CodeSCR\TC-S2-DBA-01.png)
+Status: PASS ✅
+
+
