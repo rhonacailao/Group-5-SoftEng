@@ -1,0 +1,61 @@
+Task ID: S2-TST-04
+Task Name: Per-right permission tests for customer and product (Add/Edit/Delete, price rights)
+Assigned Team Member: @IanCarloArimas
+Sprint / Week: Sprint 2 / Week 4
+Objective: Develop and execute targeted permission test cases verifying individual per-action rights (Add, Edit, Delete) for Customer, Product, and Price History modules across both frontend UI elements and backend API endpoints.
+
+TC-S2-TST-04-A: Customer Module Per-Action Rights
+Test Component: Customer Management RBAC
+Test Description: Verify that individual Add, Edit, and Delete permissions for the Customer module independently govern UI controls and backend endpoints without cross-granting unpermitted actions.
+
+Test Steps:
+-Configure a test account with Customer View + Add only (no Edit or Delete rights in public.user_permission), log in, and confirm only the Add Customer control is enabled while Edit and Delete/Restore controls are hidden or disabled.
+-Reconfigure the test account with Customer View + Edit only and confirm Add and Delete actions are blocked.
+-Reconfigure the test account with Customer View + Delete only and confirm Add and Edit actions are blocked while Delete/Restore is permitted.
+
+Expected Result: Each Customer action (Add, Edit, Delete) is strictly isolated to its corresponding granted right in public.user_permission.
+Actual Result: Individual Customer Add, Edit, and Delete rights verified cleanly across UI visibility and action execution.
+
+Status: PASS ✅
+
+TC-S2-TST-04-B: Product Module Per-Action Rights
+Test Component: Product Management RBAC
+Test Description: Verify that individual Add, Edit, and Delete permissions for the Product catalog independently govern UI actions and backend API routes.
+
+Test Steps:
+-Grant Product View + Add only to a test account and confirm Product creation succeeds while Edit and Soft Delete/Restore controls remain hidden or disabled.
+-Grant Product View + Edit only and confirm editing an existing product succeeds while Add and Delete actions are blocked.
+-Grant Product View + Delete only and confirm Soft Delete/Restore succeeds while Add and Edit actions are blocked
+
+Expected Result: Each Product action (Add, Edit, Delete) functions exclusively when its specific permission right is assigned.
+Actual Result: Individual Product Add, Edit, and Delete rights verified accurately across Product catalog workflows.
+
+Status: PASS ✅
+
+TC-S2-TST-04-C: Price History Management Per-Action Rights
+Test Component: Price History RBAC
+Test Description: Verify that specific price management rights (Add, Edit, Delete on public.pricehist) are enforced independently from general Product viewing rights.
+
+Test Steps:
+-Log in as a user with Product View rights but no Price History management rights, open a product's price history section, and verify price Add, Edit, and Delete controls are hidden or disabled.
+-Grant individual Price Add, Edit, and Delete rights in sequence and confirm each price action is enabled only when its matching price right is active.
+-Attempt direct API calls to add, update, or remove entries in public.pricehist using an account lacking the corresponding price right.
+
+Expected Result: Users without specific price rights cannot mutate historical pricing entries via UI or API, while authorized users execute permitted price actions cleanly.
+Actual Result: Granular price management rights (Add, Edit, Delete) verified across UI and public.pricehist endpoints
+
+Status: PASS ✅
+
+TC-S2-TST-04-D: Server-Side Endpoint Enforcement & UI Bypass Protection
+Test Component: Backend Authorization Middleware
+Test Description: Verify that backend server endpoints strictly reject unauthorized POST, PUT/PATCH, and DELETE requests for Customer, Product, and Price History resources even if frontend UI buttons are exposed or bypassed via direct HTTP requests
+
+Test Steps:
+-Authenticate as a valid user who possesses read access but lacks Add, Edit, or Delete rights on Customer, Product, or Price History.
+-Send direct POST (create), PUT/PATCH (edit), and DELETE (soft-delete/remove) HTTP requests with the user's valid session token to the protected backend endpoints
+-Inspect HTTP status codes, response payloads, and database tables (public.customer, public.product, public.pricehist) to confirm no state mutation occurred.
+
+Expected Result: Backend middleware rejects every unauthorized mutation with 403 Forbidden (or 401 Unauthorized if unauthenticated) and leaves all database records unmodified
+Actual Result: Server-side permission enforcement confirmed across all Customer, Product, and Price History mutation endpoints (403 Forbidden returned on unauthorized calls).
+
+Status: PASS ✅
