@@ -1,0 +1,23 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DBA-04
+Task Name: Verify child-record delete checks for customer and product
+Assigned Team Member: Karla Mae Ibuig (DB Admin)
+Sprint / Week: Sprint 2 / Week 4
+Objective: Verify referential integrity constraints and child-record dependency checks (e.g., sales, salesdetail, pricehist) 
+so that customer and product records with dependent child records cannot be orphaned or improperly deleted.
+
+Test Case ID: TC-S2-DBA-04
+Test Component: Child-Record Delete Checks & Referential Integrity
+Test Description: Verify that foreign key constraints and delete checks prevent hard-deleting customer or product records that are referenced by child tables
+(sales, salesdetail, pricehist), while allowing safe deletion of unreferenced test records
+
+Test Steps:
+-Identify an existing custno referenced in public.sales and an existing prodcode referenced in public.salesdetail or public.pricehist.
+-Attempt a DELETE statement against those referenced parent records and confirm PostgreSQL raises a foreign key violation error (23503).
+-Insert an unreferenced temporary customer and product inside a BEGIN; ... ROLLBACK; block and verify that DELETE succeeds when no child dependencies exist.
+
+Expected Result: Parent records with active child dependencies are strictly protected from deletion, while unreferenced records can be deleted cleanly without errors.
+Actual Result: Foreign key constraints and child-record dependency checks verified across customer and product tables.
+
+Status: PASS ✅
