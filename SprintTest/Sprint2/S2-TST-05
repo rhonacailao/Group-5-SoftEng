@@ -1,0 +1,65 @@
+Task ID: S2-TST-05
+Task Name: Regression test of Sprint 1
+Assigned Team Member: Ian Carlo Balajadia
+Sprint / Week: Sprint 2 / Week 4
+Objective: Execute comprehensive regression testing across all completed Sprint 1 modules and authentication features to ensure system stability, 
+verify that recent Sprint 2 updates have not introduced regressions, and validate core functionality prior to final sprint sign-off.
+
+TC-S2-TST-05-A: Authentication, Login & Session Management Regression
+Test Component: Authentication & Login Flows
+Test Description: Re-verify valid user login, invalid credential rejection, account lockout / blocked user enforcement (is_blocked = true), 
+session persistence (public.user_session), and logout invalidation after Sprint 2 codebase updates.
+
+Test Steps:
+-Log in with valid active credentials (status = 'Active', is_blocked = false) and verify redirect to the main dashboard.
+-Attempt login with an incorrect password, a Pending account, and a blocked account (is_blocked = true), confirming appropriate rejection errors.
+-Trigger logout and verify the active session token is invalidated and protected routes redirect back to login
+
+Expected Result: Valid logins succeed, blocked/pending/invalid attempts are rejected, and logout terminates active sessions cleanly without regressions.
+Actual Result: Authentication, blocked-user checks, and session lifecycle executed cleanly with zero regressions.
+Status: PASS ✅
+
+TC-S2-TST-05-B: Forgot Password & Password Reset Token Flow Regression
+Test Component: Password Recovery Flow
+Test Description: Verify that password reset requests generate valid single-use tokens in public.password_reset_token, 
+update password_hash securely, and reject expired or already-used tokens.
+
+Test Steps:
+-Submit a password reset request for an active account and verify token creation (expires_at, is_used = false).
+-Complete the password reset using the valid token and log in with the newly set password.
+-Attempt to reuse the consumed reset token (is_used = true) and confirm rejection.
+
+Expected Result: Password reset completes successfully on valid unused tokens and rejects expired or reused tokens
+Actual Result: Password reset token generation, password update, and single-use enforcement verified with no regressions.
+
+Status: PASS ✅
+
+TC-S2-TST-05-C: User Management Directory, Approval & Block/Unblock Regression
+Test Component: User Management Module
+Test Description: Verify that Superadmin/Admin users can view the user directory, approve Pending registrations, create/edit user accounts, and toggle user block status (is_blocked) without leaking password_hash in API payloads.
+
+Test Steps:
+-Log in as Superadmin/Admin and navigate to User Management.
+-Verify user listing, search, account creation/editing, and block/unblock state toggles persist properly in public.app_user.   
+-Inspect network/API responses for user endpoints to confirm password_hash is never exposed.
+
+Expected Result: All User Management CRUD and status workflows function normally and sensitive hash fields remain stripped from responses.
+Actual Result: User Management operations and response sanitization confirmed intact after Sprint 2 changes.
+
+Status: PASS ✅
+
+TC-S2-TST-05-D: Admin Rights Dialog & Permission Matrix Regression
+Test Component: Role & Permission Matrix
+Test Description: Verify that granting and revoking module/action rights in the Admin Rights dialog updates public.user_permission accurately and dynamically reflects on the main dashboard and protected routes.
+
+Test Steps:
+-Open the Admin Rights dialog for a standard user and toggle specific module permissions (public.rights / public.module).
+-Save changes and log in as that user to verify the dashboard navigation tiles and route guards dynamically reflect the updated permissions.
+-Run automated backend smoke/regression tests (auth.test.js, users.test.js) to confirm all Sprint 1 API assertions pass.
+
+Expected Result: Permission matrix updates persist cleanly, dashboard dynamic rendering stays synchronized with assigned rights, and automated Sprint 1 test suites pass.
+Actual Result: Permission matrix persistence, dynamic dashboard rendering, and Sprint 1 automated test checks passed with zero regressions.
+
+Status: PASS ✅
+
+

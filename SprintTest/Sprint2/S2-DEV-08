@@ -1,0 +1,22 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DEV-08
+Task Name: Current-price display on product page; per-action rights checks (Add/Edit/Delete) across both
+Assigned Team Member: Reb Emnacin (Developer)
+Sprint / Week: Sprint 2 / Week 4
+Objective: Display the active current unit price on the Product page using effective-date price resolution (getProductPriceAsOf) and enforce granular per-action rights (Add, Edit, Delete) across both Product and Price History UI controls and API endpoints.
+
+Test Case ID: TC-S2-DEV-08
+Test Component: Current-Price Display & Per-Action Rights (S2-DEV-08)
+Test Description: Verify that the Product page displays the latest effective unit price as of the current date, and confirm that Add, Edit, and Delete rights are independently enforced across Product and Price History.
+
+Test Steps:
+-View a product with multiple public.pricehist entries (such as AM0001 with 36.45 on 2010-05-15 and 38.27 on 2010-08-16) and verify the Product page displays the active price (38.27).
+-Grant only Add (without Edit/Delete) to a test user and confirm Edit/Delete buttons are hidden and direct PUT/DELETE API calls return 403 Forbidden.
+-Repeat granular checks for Edit-only and Delete-only permissions across both Product and Price History endpoints.
+
+Expected Result: Current active unit price renders accurately on the Product page, and each individual action (Add, Edit, Delete) is strictly gated by its corresponding user permission.
+Actual Result: Current-price display and per-action Add/Edit/Delete rights checks verified across Product and Price History.
+
+Status: PASS ✅
+
