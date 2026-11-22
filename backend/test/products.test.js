@@ -86,7 +86,7 @@ describe('S2-DEV-04 product list: shape and paging', () => {
     assert.equal(r.body.ok, true);
     assert.equal(r.body.products.length, 5);
     for (const p of r.body.products) {
-      assert.deepEqual(Object.keys(p), ['prodCode', 'description', 'unit', 'status']);
+      assert.deepEqual(Object.keys(p), ['prodCode', 'description', 'unit', 'status', 'currentPrice']);
       assert.equal(p.description, p.description.trim());
       assert.equal(p.status, 'Active');
     }

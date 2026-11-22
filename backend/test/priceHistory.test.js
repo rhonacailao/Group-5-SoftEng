@@ -113,8 +113,8 @@ describe('S2-DEV-07 price history: list', () => {
     assert.equal(r.body.product.prodCode, 'PC0001');
     assert.equal(r.body.total, r.body.prices.length);
     assert.deepEqual(r.body.prices.slice(0, 2), [
-      { prodCode: 'PC0001', effectiveDate: '2010-07-12', unitPrice: 454.54 },
-      { prodCode: 'PC0001', effectiveDate: '2010-05-15', unitPrice: 499.99 },
+      { prodCode: 'PC0001', effectiveDate: '2010-07-12', unitPrice: 454.54, state: 'Current' },
+      { prodCode: 'PC0001', effectiveDate: '2010-05-15', unitPrice: 499.99, state: 'Past' },
     ].slice(0, r.body.prices.length));
     const dates = r.body.prices.map((p) => p.effectiveDate);
     assert.deepEqual(dates, [...dates].sort().reverse());

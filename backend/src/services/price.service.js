@@ -135,7 +135,13 @@ export async function list(rawProdCode) {
   const product = await products.findByCode(prodCode);
   if (!product) throw new HttpError(404, 'Product not found');
   const history = await prices.listByProduct(prodCode);
-  return { product, prices: history, total: history.length };
+  const current = history.find((price) => price.state === 'Current') ?? null; // S2-DEV-08
+  return {
+    product,
+    currentPrice: current && { unitPrice: current.unitPrice, effectiveDate: current.effectiveDate },
+    prices: history,
+    total: history.length,
+  };
 }
 
 // POST /api/products/:prodCode/prices   { effectiveDate: '2026-12-01', unitPrice: 120.5 }

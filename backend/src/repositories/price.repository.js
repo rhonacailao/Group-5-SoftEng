@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js';
+import { businessTimeZone, todaySql } from '../config/business.js';
 
 // S2-DEV-07: reads and writes Karla's pricehist table (effdate, prodcode, unitprice).
 // A price row is identified by the product code + its effective date (that pair is the primary
@@ -13,14 +14,27 @@ function toPrice(row) {
     prodCode: row.prodcode,
     effectiveDate: row.eff,
     unitPrice: Number(row.unitprice), // DECIMAL(10,2) comes from pg as text; two decimals fit a number exactly
+    // S2-DEV-08: only the list asks for this. Current = the price in effect today, Upcoming = starts
+    // later, Past = replaced by a newer one that already started.
+    ...(row.state ? { state: row.state } : {}),
   };
 }
 
 // Newest effective date first, so the top row is the latest price
 export async function listByProduct(prodCode, db = pool) {
   const { rows } = await db.query(
-    `SELECT ${COLUMNS} FROM pricehist WHERE prodcode = $1 ORDER BY effdate DESC`,
-    [prodCode],
+    `SELECT ${COLUMNS},
+            CASE
+              WHEN effdate > ${todaySql('$2')} THEN 'Upcoming'
+              WHEN effdate = (SELECT max(h.effdate) FROM pricehist h
+                               WHERE h.prodcode = pricehist.prodcode AND h.effdate <= ${todaySql('$2')})
+                THEN 'Current'
+              ELSE 'Past'
+            END AS state
+       FROM pricehist
+      WHERE prodcode = $1
+      ORDER BY effdate DESC`,
+    [prodCode, businessTimeZone()],
   );
   return rows.map(toPrice);
 }
