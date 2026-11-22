@@ -1,0 +1,62 @@
+Task ID: S2-TST-03
+Task Name: Soft delete/restore tests, incl. delete blocked by active children
+Assigned Team Member: @IanCarloArimas (Tester)
+Sprint / Week: Sprint 2
+Objective: Develop and execute comprehensive test scenarios for soft delete and restore functionality across customer and product modules, verifying record state transitions, active view filtering, and guard rules that block deletion when active child records exist.
+
+TC-S2-TST-03-A: Customer Soft Delete, Active View Filtering & Restore
+Test Component: Customer Soft Delete & Restore
+Test Description: Verify that soft-deleting an eligible customer sets deleted_at and excludes the record from active customer views (public.active_customers), while restoring clears deleted_at (NULL) and returns the customer to active status.
+
+Test Steps:
+-Select an eligible active customer with no blocking child records and trigger the soft-delete action.
+-Confirm the customer disappears from the active Customer List (public.active_customers, deleted_at IS NULL) while remaining present in public.customer with a non-null deleted_at timestamp.
+-Trigger the restore action on the soft-deleted customer and verify deleted_at resets to NULL and the record reappears in the active directory.
+
+Expected Result: Soft-deleted customers are hidden from active views without data loss and restore cleanly to active status.
+Actual Result: Customer soft delete (deleted_at timestamping), active view filtering, and restoration workflows verified successfully
+
+Status: PASS ✅
+
+TC-S2-TST-03-B: Product Soft Delete, Active View Filtering & Restore
+Test Component: Product Soft Delete & Restore
+Test Description: Verify that soft-deleting an eligible product sets deleted_at and hides it from active product views (public.active_products), while restoring resets deleted_at (NULL) and returns it to active status.
+
+Test Steps:
+-Select an eligible active product with no blocking child dependencies and trigger soft delete.
+-Confirm the product is excluded from the active Product List (deleted_at IS NULL) while remaining in public.product with deleted_at populated.
+-Trigger restore on the soft-deleted product and verify deleted_at resets to NULL and the product reappears in the active catalog.
+
+Expected Result: Soft-deleted products are removed from active views without data loss and recover cleanly upon restoration
+Actual Result: Product soft delete, active filtering, and restore workflows verified successfully.
+
+Status: PASS ✅
+
+TC-S2-TST-03-C: Customer Deletion Blocked by Active Child Records
+Test Component: Customer Child-Record Guard Check
+Test Description: Verify that attempting to delete a customer that has active child records (such as transactions in public.sales) is blocked by database/API guard rules and preserves the parent record.
+
+Test Steps:
+-Identify an existing custno that has dependent child records in public.sales.
+-Attempt a delete/archive operation through the UI/API or a direct DELETE FROM public.customer WHERE custno = ... check.
+-Confirm the operation is rejected (23503 foreign key violation / guard rejection error) and the customer and child records remain intact.
+
+Expected Result: Deletion is blocked whenever active child records reference the customer, preventing orphaned child rows.
+Actual Result: Customer delete guard / foreign key protection verified against dependent child records
+
+Status: PASS ✅
+
+TC-S2-TST-03-D: Product Deletion Blocked by Active Child Records
+Test Component: Product Child-Record Guard Check
+Test Description: Verify that attempting to delete a product referenced by active child records (such as public.salesdetail or public.pricehist) is blocked so child history and sales line items remain intact.
+
+Test Steps:
+-Identify an existing prodcode referenced in public.salesdetail or public.pricehist
+-Attempt to delete the referenced product record and verify PostgreSQL / the application blocks the deletion.
+-Confirm the product row and its child records in public.salesdetail / public.pricehist remain untouched.
+
+Expected Result: Deletion is blocked when active child records reference the product, preserving referential integrity
+Actual Result: Product delete guard / foreign key protection verified against child records.   
+
+Status: PASS ✅
+
