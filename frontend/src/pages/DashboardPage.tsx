@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Card from "../components/Card";
 
 // Figures are mock data modelled on the Hope, Inc. database
 // (customer, product, sales / salesDetail, payment tables).
@@ -151,7 +152,7 @@ function DashboardPage() {
         </h2>
         <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map(({ label, value, icon, note }) => (
-            <div key={label} className="rounded-xl bg-paper p-6 shadow-lg">
+            <Card key={label} className="p-6">
               <div className="flex items-center justify-between">
                 <dt className="text-xl font-semibold text-dark-grey">
                   {label}
@@ -168,7 +169,7 @@ function DashboardPage() {
                   {note}
                 </span>
               </dd>
-            </div>
+            </Card>
           ))}
         </dl>
       </section>
@@ -181,9 +182,10 @@ function DashboardPage() {
         <ul className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {quickActions.map(({ to, label, note, icon }) => (
             <li key={to}>
-              <Link
+              <Card
+                as={Link}
                 to={to}
-                className="flex h-full items-center gap-4 rounded-xl bg-paper p-6 shadow-lg transition-colors duration-200 ease-in-out hover:bg-white"
+                className="flex h-full items-center gap-4 p-6 transition-colors duration-200 ease-in-out hover:bg-white"
               >
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-fire text-2xl text-white">
                   <i className={`fa-solid ${icon}`} aria-hidden="true" />
@@ -196,17 +198,14 @@ function DashboardPage() {
                   className="fa-solid fa-arrow-right text-fire"
                   aria-hidden="true"
                 />
-              </Link>
+              </Card>
             </li>
           ))}
         </ul>
       </section>
 
       {/*----------Upcoming deliverables----------*/}
-      <section
-        aria-labelledby="deliverables-heading"
-        className="rounded-xl bg-paper p-6 shadow-lg"
-      >
+      <Card as="section" aria-labelledby="deliverables-heading" className="p-6">
         <header className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="deliverables-heading" className="text-2xl font-bold">
             Upcoming deliverables
@@ -258,7 +257,7 @@ function DashboardPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Card>
     </div>
   );
 }

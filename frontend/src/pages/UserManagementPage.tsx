@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import RightsDialog from "../components/RightsDialog";
+import Card from "../components/Card";
 import { api, errorMessage } from "../lib/api";
 import {
   canManage,
@@ -164,7 +165,7 @@ function UserManagementPage() {
       )}
       {loading && <p className="mb-4 text-dark-grey">Loading users...</p>}
 
-      <div className="overflow-x-auto rounded-xl bg-paper p-2 shadow-lg">
+      <Card className="overflow-x-auto p-2">
         <table className="w-full min-w-[40rem] text-left">
           <thead className="text-sm text-dark-grey">
             <tr>
@@ -274,7 +275,7 @@ function UserManagementPage() {
             })}
           </tbody>
         </table>
-      </div>
+      </Card>
 
       {editingRights && (
         <RightsDialog

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import Card from "../components/Card";
 
 function AccountPage() {
   const navigate = useNavigate();
@@ -30,9 +31,10 @@ function AccountPage() {
         <h1 className="text-5xl font-bold leading-none">My account</h1>
       </header>
 
-      <section
+      <Card
+        as="section"
         aria-labelledby="profile-heading"
-        className="flex flex-col gap-6 rounded-xl bg-paper p-6"
+        className="flex flex-col gap-6 p-6"
       >
         <header className="flex items-center gap-4">
           <span className="flex h-16 w-16 items-center justify-center rounded-full bg-fire text-2xl font-bold text-white">
@@ -66,11 +68,12 @@ function AccountPage() {
             </div>
           ))}
         </dl>
-      </section>
+      </Card>
 
-      <section
+      <Card
+        as="section"
         aria-labelledby="security-heading"
-        className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-paper p-6"
+        className="flex flex-wrap items-center justify-between gap-4 p-6"
       >
         <div>
           <h2 id="security-heading" className="text-2xl font-bold">
@@ -95,7 +98,7 @@ function AccountPage() {
             Log out
           </button>
         </div>
-      </section>
+      </Card>
     </div>
   );
 }

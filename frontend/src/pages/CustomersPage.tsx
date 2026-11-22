@@ -7,6 +7,7 @@ import CustomerDialog, {
 } from "../components/CustomerDialog";
 import EmptyState from "../components/EmptyState";
 import ErrorBanner from "../components/ErrorBanner";
+import Card from "../components/Card";
 import { describeError, type ErrorInfo } from "../lib/errorInfo";
 import { payTermLabels, type PayTerm } from "../lib/payTerms";
 import { useDismiss } from "../lib/useDismiss";
@@ -397,11 +398,11 @@ function CustomersPage() {
             </button>
 
             {filterOpen && (
-              <div
+              <Card
                 id="customer-filter-panel"
                 role="group"
                 aria-label="Filter customers"
-                className="absolute left-0 z-30 mt-2 flex w-72 flex-col gap-4 rounded-xl bg-paper p-4 shadow-lg"
+                className="absolute left-0 z-30 mt-2 flex w-72 flex-col gap-4 p-4"
               >
                 <fieldset>
                   <legend className="mb-2 text-sm font-semibold text-dark-grey">
@@ -458,7 +459,7 @@ function CustomersPage() {
                 >
                   Clear filters
                 </button>
-              </div>
+              </Card>
             )}
           </div>
           <div className="relative">
@@ -492,7 +493,7 @@ function CustomersPage() {
       </div>
 
       {/*----------Table----------*/}
-      <div className="overflow-x-auto rounded-xl bg-paper p-2 shadow-lg">
+      <Card className="overflow-x-auto p-2">
         <table className="w-full min-w-[48rem] text-left">
           <caption className="sr-only">Customers</caption>
           <thead className="text-sm text-dark-grey">
@@ -677,7 +678,7 @@ function CustomersPage() {
             })}
           </tbody>
         </table>
-      </div>
+      </Card>
 
       {/*----------Paging----------*/}
       {total > PAGE_SIZE && (

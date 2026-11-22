@@ -1,13 +1,30 @@
 import { useState } from "react";
+import Card from "../components/Card";
 
 type Toggle = { id: string; label: string; detail: string };
 
 // Mock settings: the back end has no system settings endpoint yet.
 const toggles: Toggle[] = [
-  { id: "maintenance", label: "Maintenance mode", detail: "Only Superadmins can sign in while this is on." },
-  { id: "registration", label: "Open registration", detail: "Let new people create an account without an invite." },
-  { id: "approval", label: "Require approval for new accounts", detail: "An Admin must approve each new registration." },
-  { id: "audit", label: "Audit log", detail: "Record who changed what across all modules." },
+  {
+    id: "maintenance",
+    label: "Maintenance mode",
+    detail: "Only Superadmins can sign in while this is on.",
+  },
+  {
+    id: "registration",
+    label: "Open registration",
+    detail: "Let new people create an account without an invite.",
+  },
+  {
+    id: "approval",
+    label: "Require approval for new accounts",
+    detail: "An Admin must approve each new registration.",
+  },
+  {
+    id: "audit",
+    label: "Audit log",
+    detail: "Record who changed what across all modules.",
+  },
 ];
 
 /** Superadmin only. Not the same as /settings, which holds general website settings. */
@@ -32,7 +49,7 @@ function SystemSettingsPage() {
 
       <ul className="flex max-w-3xl flex-col gap-3">
         {toggles.map((t) => (
-          <li key={t.id} className="rounded-xl bg-paper p-4 shadow-lg">
+          <Card as="li" key={t.id} className="p-4">
             <label className="flex cursor-pointer items-center justify-between gap-6">
               <span>
                 <span className="block font-semibold">{t.label}</span>
@@ -46,7 +63,7 @@ function SystemSettingsPage() {
                 className="h-5 w-5 shrink-0 accent-fire"
               />
             </label>
-          </li>
+          </Card>
         ))}
       </ul>
     </section>
