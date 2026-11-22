@@ -1,0 +1,68 @@
+Task ID: S2-TST-01
+Task Name: Customer Management Test Cases & Verification Scenarios
+Assigned Team Member: Ian Carlo Balajadia
+Sprint / Week: Sprint 2 / Week 3
+Objective: Develop comprehensive test cases and verification scenarios for the Customer Management module—covering customer search filters, 
+create/edit form validations, soft delete/restore workflows, and permission checks—to guarantee system reliability and data integrity.
+
+TC-S2-TST-01: Customer Search & Payment Term Filter Verification
+Test Component: Customer List Search & Filtering
+Test Description: Verify that authorized users can search active customers (public.active_customers, deleted_at IS NULL) by customer number/name 
+and filter records by allowed payment terms
+
+Test Steps:
+-Log in as an authorized user with customer view permissions and navigate to the Customer Management list.   
+-Enter a known custno or partial custname into the search input and verify real-time case-insensitive matching (customer_active_name_idx).   
+-Filter the customer directory by COD, 30D, and 45D individually, then clear filters to restore the full active list. 
+
+Expected Result: Matching active customer records display accurately for all search queries and payment term filters without exposing soft-deleted records.
+Actual Result: Search and payment term filter workflows verified accurately against
+
+Status: PASS ✅
+
+TC-S2-TST-02: Customer Create & Edit Form Validation Rules
+Test Component: Customer Create & Edit Form
+Test Description: Verify that customer creation and edit forms persist valid payloads while enforcing required field constraints, 
+column length limits (custno VARCHAR(5), custname VARCHAR(20)), and payterm check constraints (pay_ck: 'COD', '30D', '45D').
+
+Test Steps:
+-Open the Create Customer form, submit valid customer values (custno, custname, address, payterm), and confirm persistence in public.customer.
+-Edit an existing customer's details and verify the updated record saves cleanly.
+-Attempt to submit blank required fields, oversized strings, or disallowed payterm values (e.g., '60D' or NULL).
+
+Expected Result: Valid creates and updates succeed cleanly, while invalid inputs trigger clear validation 
+errors and are blocked at both UI and database (pay_ck / NOT NULL) boundaries.
+Actual Result: Form validation rules and database pay_ck / NOT NULL constraints verified across positive and negative payloads.
+
+
+Status: PASS ✅
+
+TC-S2-TST-03: Customer Soft Delete & Account Restoration Workflow
+Test Component: Customer Soft Delete & Restore (S2-DEV-03 / S2-TST-01)
+Test Description: Verify that soft-deleting a customer populates deleted_at and hides the record from active customer views, 
+while restoring sets deleted_at = NULL and returns the customer to active status.
+
+Test Steps:
+-Trigger soft delete on an active customer and verify it disappears from the active Customer List
+-Inspect public.customer / archived filter view to confirm the record remains intact with a non-null deleted_at timestamp.
+-Trigger the restore action on the soft-deleted customer and confirm deleted_at resets to NULL and the record reappears in the active directory.
+
+Expected Result: Soft-deleted customers are excluded from active queries without data loss and recover cleanly upon restoration
+Actual Result: Soft delete (deleted_at timestamping) and restore (deleted_at IS NULL) workflows validated cleanly.
+
+Status: PASS ✅
+
+TC-S2-TST-04: Role-Based Access Rights & Permission Enforcement
+Test Component: Customer Module Permission Checks
+Test Description: Verify that role-based access rights strictly restrict viewing, creating, editing, soft-deleting, 
+and restoring customers to authorized users across both frontend routes and backend API endpoints.
+
+Test Steps:
+-Log in as a standard user lacking Customer Management rights and confirm Customer UI actions/routes are hidden or blocked.
+-Attempt direct API calls (GET, POST, PUT, DELETE, PATCH) to customer endpoints using an unauthorized session token.
+-Log in as an authorized user/admin with explicit Customer permissions and verify full authorized access.
+
+Expected Result: Unauthorized accounts receive 403 Forbidden (or 401 Unauthorized when unauthenticated) on restricted endpoints, while authorized accounts operate normally.
+Actual Result: Role-based access controls verified at both UI navigation and backend API middleware layers.
+
+Status: PASS ✅
