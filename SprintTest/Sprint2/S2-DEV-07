@@ -1,0 +1,22 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DEV-07
+Task Name: Price history: add, edit and delete price with effective date
+Assigned Team Member: Reb Emnacin (Developer)
+Sprint / Week: Sprint 2 / Week 4
+Objective: Implement frontend interfaces and backend API endpoints to add, edit, and delete historical product pricing entries (prodcode, effdate, unitprice) in public.pricehist with effective-date validation
+
+Test Case ID: TC-S2-DEV-07
+Test Component: Price History CRUD with Effective Date
+Test Description: Verify that users with price management rights can add, edit, and delete historical price entries with valid effdate and unitprice values while rejecting duplicate/invalid effective dates.
+
+Test Steps:
+-Open a product's Price History section, add a new price entry with a valid effdate and positive unitprice, and verify persistence in public.pricehist.
+-Edit an existing price history entry's unitprice / effdate and confirm updates save cleanly.
+-Delete a test price entry and verify removal, as well as attempting invalid dates or negative/zero prices.
+
+Expected Result: Valid price history add, edit, and delete operations succeed cleanly, while invalid dates/amounts are rejected.
+Actual Result: Price history CRUD operations with effective date implemented and verified successfully.
+
+Status: PASS ✅
+
