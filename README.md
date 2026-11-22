@@ -66,6 +66,7 @@ cd backend
 npm install
 cp .env.example .env      # then fill in DATABASE_URL (never commit .env)
 npm run dev               # http://localhost:3000
+```
 
 ### Frontend
 
