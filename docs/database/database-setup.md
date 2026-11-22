@@ -54,7 +54,13 @@ npx.cmd supabase db push --linked
 
 Do not apply unreviewed migrations to the shared database.
 
-## 5. Database Verification
+## 5. Local Demo Data
+
+The configured `supabase/seed.sql` adds three demo customers, three products, and two effective-date prices per product. It runs after migrations with `npx.cmd supabase db reset` against the local Supabase database. The inserts use `ON CONFLICT DO NOTHING`, so re-running the seed does not duplicate records or overwrite existing rows.
+
+The demo product codes are `DM9001` through `DM9003`; their price histories use effective dates `2025-01-01` and `2025-06-01`.
+
+## 6. Database Verification
 
 1. Open the Supabase Dashboard.
 2. Select the HOPE ERP project.
@@ -65,7 +71,7 @@ SELECT 1 AS connection_test;
 
 5. A result of 1 confirms that the SQL Editor can execute a query.
 
-## 6. Security Guidelines
+## 7. Security Guidelines
 
 - Never commit database passwords or access tokens.
 - Do not upload .env files containing secrets.
@@ -73,7 +79,7 @@ SELECT 1 AS connection_test;
 - Enable Row Level Security for application tables.
 - Review database changes before merging Pull Requests.
 
-## 7. Known Setup Issue
+## 8. Known Setup Issue
 
 The Supabase CLI has encountered a database connection timeout during migration checks.
 

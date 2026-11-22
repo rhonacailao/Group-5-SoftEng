@@ -1,0 +1,24 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DEV-06
+Task Name: Product soft delete and restore
+Assigned Team Member: Reb Emnacin (Developer)
+Sprint / Week: Sprint 2 / Week 4
+Objective: Implement soft-delete (deleted_at populated) and restore (deleted_at = NULL) workflows for product records so 
+archived products are excluded from active views while preserving historical references.
+
+Test Case ID: TC-S2-DEV-06
+Test Component: Product Soft Delete & Restore
+Test Description: Verify that soft-deleting a product hides it from active product lists (public.active_products) 
+and restoring clears deleted_at to return it to active status.
+
+Test Steps:
+-Trigger soft delete on an active product and confirm it is removed from the active Product List.
+-Check archived/deleted records to confirm deleted_at is set without removing the row from public.product.
+-Trigger restore on the soft-deleted product and confirm deleted_at resets to NULL and the product reappears in the active list.
+
+Expected Result: Soft-deleted products are hidden from active views without data loss and restore cleanly to active status.
+Actual Result: Product soft delete and restore workflows implemented and verified successfully.
+
+Status: PASS ✅
+

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as products from '../controllers/product.controller.js';
+import * as prices from '../controllers/price.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePermission } from '../middleware/permission.js';
 
@@ -34,5 +35,12 @@ router.patch('/:prodCode', requirePermission('PRODUCT_EDIT'), products.update);
 // separate Restore right).
 router.delete('/:prodCode', requirePermission('PRODUCT_DELETE'), products.remove);
 router.patch('/:prodCode/restore', requirePermission('PRODUCT_DELETE'), products.restore);
+
+// S2-DEV-07: price history of one product. Viewing follows the same rule as the product list;
+// each change needs its own price right (add / edit / delete).
+router.get('/:prodCode/prices', requirePermission(...PRODUCT_ACCESS), prices.list);
+router.post('/:prodCode/prices', requirePermission('PRICE_ADD'), prices.create);
+router.patch('/:prodCode/prices/:effDate', requirePermission('PRICE_EDIT'), prices.update);
+router.delete('/:prodCode/prices/:effDate', requirePermission('PRICE_DELETE'), prices.remove);
 
 export default router;

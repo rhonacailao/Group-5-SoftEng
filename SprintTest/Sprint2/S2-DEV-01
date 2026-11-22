@@ -1,0 +1,22 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DEV-01
+Task Name: Customer list with search and filter (permission-checked)
+Assigned Team Member: Reb Emnacin (Developer)
+Sprint / Week: Sprint 2 / Week 3
+Objective: Implement the Customer Management directory screen with real-time search and filtering capabilities,
+backed by role-based permission checks on both the frontend UI and backend API endpoints.
+
+Test Case ID: TC-S2-DEV-01
+Test Component: Customer List, Search, Filter & Permission Checks
+Test Description: Verify that authorized users can view, search, and filter active customer records, and confirm that unauthorized roles are denied access 
+at both the UI and API layers.
+
+Test Steps:
+-Log in as a user with customer view permissions and open the Customer List module.
+-Test searching by customer number/name and filtering by payment terms. 
+-Log in as a user without customer view permissions and attempt to access the Customer List page or call the customer listing API endpoint directly.
+
+Expected Result: Authorized users see filtered active customers accurately, while unauthorized users are blocked from viewing or querying customer records.
+Actual Result: Customer list, search/filter controls, and permission checks implemented and verified successfully.
+Status: PASS ✅

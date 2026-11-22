@@ -1,0 +1,21 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DBA-06
+Task Name: Search performance check and index tuning
+Assigned Team Member: Karla Mae Ibuig (DB Admin)
+Sprint / Week: Sprint 2 / Week 4
+Objective: Benchmark and tune search and filter query execution plans across active customer, product, and price history lookups to ensure low-latency index utilization.
+
+Test Case ID: TC-S2-DBA-06
+Test Component: Search Performance Benchmarking & Index Tuning
+Test Description: Verify that search and filter queries on customer, product, and pricehist utilize tuned indexes and execute within optimal latency thresholds.
+
+Test Steps:
+-Inspect all active indexes on public.customer, public.product, and public.pricehist via pg_indexes.
+-Execute EXPLAIN ANALYZE against prefix search (lower(custname) LIKE ..., lower(description) LIKE ...), filter (payterm, unit), and historical pricing (prodcode, effdate) queries.
+-Confirm index scans / bitmap index scans and sub-millisecond to low-millisecond execution times in the query planner output.   
+
+Expected Result: Search and filter queries leverage tuned indexes effectively with fast execution times and zero performance bottlenecks.
+Actual Result: Search performance benchmarks and index tuning verified via EXPLAIN ANALYZE execution plans
+
+Status: PASS ✅
