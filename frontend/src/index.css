@@ -1,9 +1,28 @@
+@import "tailwindcss";
+
 @font-face {
   font-family: Avenir;
   src: url("../src/assets/fonts/Avenir\ Next\ Regular.woff2");
 }
-@import "tailwindcss";
 
 @theme {
-  --font-avenir: AvenirNext, "sans-serif";
+  --font-avenir: Avenir, sans-serif;
+  --color-white: #f5f5f5;
+  --color-fire: #ea5c1f;
+  --color-fire-light: #ed9555;
+  --color-light-grey: #d6d7d7;
+  --color-dark-grey: #4f5d75;
+  --color-dark: #212431;
+  --color-cream: #e7e1d7;
+  --color-paper: #f0ece9;
+}
+
+@layer base {
+  html {
+    font-size: 90%;
+  }
+
+  body {
+    @apply text-dark bg-white;
+  }
 }
