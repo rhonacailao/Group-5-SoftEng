@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import Card from "../components/Card";
+import Badge, { type BadgeVariant } from "../components/Badge";
 
 // Figures are mock data modelled on the Hope, Inc. database
 // (customer, product, sales / salesDetail, payment tables).
@@ -119,21 +120,11 @@ const quickActions = [
   },
 ];
 
-const tagStyles: Record<Status, string> = {
-  Pending: "border-blue-900 bg-blue-300 text-blue-800",
-  Done: "border-green-900 bg-green-300 text-green-800",
-  Overdue: "border-red-900 bg-red-300 text-red-800",
+const statusVariant: Record<Status, BadgeVariant> = {
+  Pending: "info",
+  Done: "success",
+  Overdue: "danger",
 };
-
-function StatusTag({ status }: { status: Status }) {
-  return (
-    <span
-      className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${tagStyles[status]}`}
-    >
-      {status}
-    </span>
-  );
-}
 
 function DashboardPage() {
   const count = (s: Status) =>
@@ -250,7 +241,7 @@ function DashboardPage() {
                     <time>{d.due}</time>
                   </td>
                   <td className="px-2 py-3">
-                    <StatusTag status={d.status} />
+                    <Badge variant={statusVariant[d.status]}>{d.status}</Badge>
                   </td>
                 </tr>
               ))}
