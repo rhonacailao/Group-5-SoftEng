@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuthStore } from "../store/authStore";
 import { api, ApiError, errorMessage } from "../lib/api";
+import ConfirmDialog from "../components/ConfirmDialog";
 import CustomerDialog, {
   type CustomerValues,
 } from "../components/CustomerDialog";
+import EmptyState from "../components/EmptyState";
+import ErrorBanner from "../components/ErrorBanner";
+import { describeError, type ErrorInfo } from "../lib/errorInfo";
 import { payTermLabels, type PayTerm } from "../lib/payTerms";
 import { useDismiss } from "../lib/useDismiss";
 import {
@@ -105,12 +109,17 @@ function CustomersPage() {
   useDismiss(filterRef, filterOpen, closeFilter);
   const [page, setPage] = useState(1);
   const [reloadKey, setReloadKey] = useState(0);
-  // Two kinds of message, so a reload of the list can never wipe out why an action was refused:
-  //   actionError = a delete / restore / add was refused (stays until the next action)
-  //   listError   = the list itself could not be loaded (clears when a load works)
-  const [actionError, setActionError] = useState("");
-  const [listError, setListError] = useState("");
-  const error = actionError || listError;
+  // Three kinds of error, so a reload can never wipe out why an action was refused:
+  //   rightsError = the rights lookup failed (stays)
+  //   actionError = a restore / add was refused (stays until dismissed or the next action)
+  //   listError   = the list could not be loaded (clears the next time a load works)
+  const [rightsError, setRightsError] = useState<ErrorInfo | null>(null);
+  const [actionError, setActionError] = useState<ErrorInfo | null>(null);
+  const [listError, setListError] = useState<ErrorInfo | null>(null);
+  // Confirm-delete state: the customer waiting for a yes, and what the server said when asked
+  const [pendingDelete, setPendingDelete] = useState<ApiCustomer | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<ErrorInfo | null>(null);
   const [busyNo, setBusyNo] = useState<string | null>(null); // customer whose delete/restore is running
   const [dialog, setDialog] = useState<DialogState>(null);
   const [dialogError, setDialogError] = useState("");
@@ -126,7 +135,7 @@ function CustomersPage() {
         ),
     )
       .then(setRights)
-      .catch((err) => setActionError(errorMessage(err)));
+      .catch((err) => setRightsError(describeError(err)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDemo]);
 
@@ -150,10 +159,10 @@ function CustomersPage() {
           .then((res) => {
             if (stale) return;
             setData(res);
-            setListError("");
+            setListError(null);
           })
           .catch((err) => {
-            if (!stale) setListError(errorMessage(err));
+            if (!stale) setListError(describeError(err));
           });
       },
       query ? 300 : 0,
@@ -169,44 +178,53 @@ function CustomersPage() {
 
   // ---------- soft delete and restore (S2-DEV-03) ----------
   // DELETE /api/customers/:custNo   and   PATCH /api/customers/:custNo/restore
-  // The server refuses a delete while the customer still has sales; its message shows in the banner.
-  const softDelete = async (c: ApiCustomer) => {
-    const ok = window.confirm(
-      `Delete ${c.custName} (${c.custNo})?\n\nIt will be marked Inactive and can be restored later.`,
-    );
-    if (!ok) return;
-    setBusyNo(c.custNo);
-    setActionError("");
+  // After a row leaves the current tab, step back a page if that was the last row on it
+  const refreshAfterRowChange = () => {
+    if (data && data.customers.length === 1 && page > 1 && tab !== "all")
+      setPage(page - 1);
+    else reload();
+  };
+
+  // Delete asks first. The server refuses a delete while the customer still has sales;
+  // its reason shows inside the confirm dialog, so it can be read before closing.
+  const askDelete = (c: ApiCustomer) => {
+    setDeleteError(null);
+    setActionError(null);
+    setPendingDelete(c);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete || deleting) return;
+    const c = pendingDelete;
+    setDeleting(true);
+    setDeleteError(null);
     try {
       await run(
         () => demoRemove(c.custNo),
         () => api(`/api/customers/${c.custNo}`, { method: "DELETE" }),
       );
-      // Deleted the last row of the last page: step back so the page is not empty
-      if (data && data.customers.length === 1 && page > 1 && tab !== "all")
-        setPage(page - 1);
-      else reload();
+      setPendingDelete(null);
+      refreshAfterRowChange();
     } catch (err) {
-      setActionError(errorMessage(err));
+      setDeleteError(describeError(err));
       reload(); // someone else may have changed it: show what is really there
     } finally {
-      setBusyNo(null);
+      setDeleting(false);
     }
   };
 
+  // Restore needs no confirmation: it undoes a delete and nothing is lost
   const restore = async (c: ApiCustomer) => {
     setBusyNo(c.custNo);
-    setActionError("");
+    setActionError(null);
     try {
       await run(
         () => demoRestore(c.custNo),
         () => api(`/api/customers/${c.custNo}/restore`, { method: "PATCH" }),
       );
-      if (data && data.customers.length === 1 && page > 1 && tab !== "all")
-        setPage(page - 1);
-      else reload();
+      refreshAfterRowChange();
     } catch (err) {
-      setActionError(errorMessage(err));
+      setActionError(describeError(err));
       reload();
     } finally {
       setBusyNo(null);
@@ -222,7 +240,7 @@ function CustomersPage() {
       setDialogError("");
       setDialog({ mode: "add", custNo: next.custNo });
     } catch (err) {
-      setActionError(errorMessage(err));
+      setActionError(describeError(err));
     }
   };
 
@@ -248,7 +266,7 @@ function CustomersPage() {
         );
       }
       setDialog(null);
-      setActionError("");
+      setActionError(null);
       reload();
     } catch (err) {
       setDialogError(saveMessage(err)); // the dialog stays open so nothing typed is lost
@@ -267,12 +285,20 @@ function CustomersPage() {
     setTab("active");
     setPage(1);
   };
+  // For the empty state: drop the search word and the pay-terms filter
+  const clearSearchAndFilter = () => {
+    setQuery("");
+    setPayTerm("");
+    setPage(1);
+  };
   const counts = data?.counts;
   const rows = data?.customers ?? [];
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const colCount = canDelete ? 6 : 5;
-  const loading = data === null && !error;
+  const loading = data === null && !listError;
+  const loadFailed = listError !== null && data === null;
+  const filtering = query.trim() !== "" || payTerm !== "";
 
   const description = canDelete
     ? "Add, edit, delete and restore customers. Deleted customers stay here as Inactive."
@@ -295,13 +321,23 @@ function CustomersPage() {
           customer list.
         </p>
       )}
-      {error && (
-        <p
-          role="alert"
-          className="rounded-md bg-red-200 px-4 py-2 text-red-800"
-        >
-          {error}
-        </p>
+      {/* Error state: each message says what failed and, where it helps, how to get out */}
+      {rightsError && (
+        <ErrorBanner title={rightsError.title} message={rightsError.message} />
+      )}
+      {actionError && (
+        <ErrorBanner
+          title={actionError.title}
+          message={actionError.message}
+          onDismiss={() => setActionError(null)}
+        />
+      )}
+      {listError && data && (
+        <ErrorBanner
+          title={listError.title}
+          message={listError.message}
+          onRetry={reload}
+        />
       )}
 
       {/*----------Toolbar: status tabs, search, add----------*/}
@@ -494,13 +530,76 @@ function CustomersPage() {
                 </td>
               </tr>
             )}
-            {!loading && rows.length === 0 && (
+            {/* Error state, first load: the table itself explains and offers a retry */}
+            {loadFailed && (
               <tr className="border-t border-light-grey">
-                <td
-                  colSpan={colCount}
-                  className="px-4 py-8 text-center text-dark-grey"
-                >
-                  No customers found.
+                <td colSpan={colCount}>
+                  <EmptyState
+                    icon="fa-triangle-exclamation"
+                    title="Couldn't load the customers"
+                    action={
+                      <button
+                        type="button"
+                        onClick={reload}
+                        className={actionButton}
+                      >
+                        Try again
+                      </button>
+                    }
+                  >
+                    {listError.message}
+                  </EmptyState>
+                </td>
+              </tr>
+            )}
+            {/* Empty state: three different reasons, three different messages */}
+            {!loading && !loadFailed && rows.length === 0 && (
+              <tr className="border-t border-light-grey">
+                <td colSpan={colCount}>
+                  {filtering ? (
+                    <EmptyState
+                      icon="fa-magnifying-glass"
+                      title="No customers match your search"
+                      action={
+                        <button
+                          type="button"
+                          onClick={clearSearchAndFilter}
+                          className={actionButton}
+                        >
+                          Clear search and filter
+                        </button>
+                      }
+                    >
+                      Try a different word, or clear the search and the pay
+                      terms filter.
+                    </EmptyState>
+                  ) : canDelete && tab === "inactive" ? (
+                    <EmptyState
+                      icon="fa-trash-can"
+                      title="No deleted customers"
+                    >
+                      Customers you delete appear here, and can be restored.
+                    </EmptyState>
+                  ) : (
+                    <EmptyState
+                      title="No customers yet"
+                      action={
+                        canAdd ? (
+                          <button
+                            type="button"
+                            onClick={openAdd}
+                            className={actionButton}
+                          >
+                            Add the first customer
+                          </button>
+                        ) : undefined
+                      }
+                    >
+                      {canAdd
+                        ? "Add a customer to get started."
+                        : "There are no customers to show."}
+                    </EmptyState>
+                  )}
                 </td>
               </tr>
             )}
@@ -561,7 +660,7 @@ function CustomersPage() {
                           {canDelete && (
                             <button
                               type="button"
-                              onClick={() => softDelete(c)}
+                              onClick={() => askDelete(c)}
                               disabled={busyNo === c.custNo}
                               aria-label={`Delete ${c.custName}`}
                               className={actionButton}
@@ -633,6 +732,28 @@ function CustomersPage() {
           onSave={save}
           onClose={() => setDialog(null)}
         />
+      )}
+
+      {/* Confirm-delete state: nothing is deleted until the person says yes */}
+      {pendingDelete && (
+        <ConfirmDialog
+          title={`Delete ${pendingDelete.custName}?`}
+          confirmLabel="Delete customer"
+          busyLabel="Deleting..."
+          busy={deleting}
+          error={deleteError}
+          onConfirm={confirmDelete}
+          onCancel={() => !deleting && setPendingDelete(null)}
+        >
+          <p>
+            <b>{pendingDelete.custName}</b> ({pendingDelete.custNo}) will be
+            marked Inactive and hidden from the Active list.
+          </p>
+          <p className="mt-2 text-sm text-dark-grey">
+            You can restore it later from the Inactive tab. A customer that
+            still has sales cannot be deleted.
+          </p>
+        </ConfirmDialog>
       )}
     </section>
   );
