@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import StatusBadge from "./StatusBadge";
-import StatusTabs from "./StatusTabs";
+import ConfirmDialog from "./ConfirmDialog";
+import EmptyState from "./EmptyState";
+import ErrorBanner from "./ErrorBanner";
 import TextField from "./TextField";
-import { errorMessage } from "../lib/api";
+import { describeError, type ErrorInfo } from "../lib/errorInfo";
 import { priceApi } from "../lib/productApi";
 import {
   actionButton,
-  currentEffDate,
   dangerButton,
   money,
   saveMessage,
@@ -14,7 +14,6 @@ import {
   type ApiPrice,
   type ApiProduct,
   type PriceListResponse,
-  type Tab,
 } from "../lib/products";
 import { unitLabels } from "../lib/units";
 
@@ -24,8 +23,6 @@ type PriceForm = { mode: "add" | "edit"; effDate: string; unitPrice: string };
 
 type PriceHistoryDialogProps = {
   product: ApiProduct;
-  /** Admin / Superadmin: sees deleted prices, Status and Stamp */
-  privileged: boolean;
   can: PriceCan;
   demo: boolean;
   onClose: () => void;
@@ -33,9 +30,11 @@ type PriceHistoryDialogProps = {
   onChanged: () => void;
 };
 
+// Price history of one product (S2-DEV-07 / S2-DEV-08).
+// Everyone who can open the page sees the same table; the rights decide who may add, edit or
+// delete. Deleting a price is permanent (the price table has no soft delete), so it asks first.
 function PriceHistoryDialog({
   product,
-  privileged,
   can,
   demo,
   onClose,
@@ -44,20 +43,18 @@ function PriceHistoryDialog({
   const ref = useRef<HTMLDialogElement>(null);
   const code = product.prodCode;
 
-  const [tab, setTab] = useState<Tab>("active");
   const [data, setData] = useState<PriceListResponse | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [listError, setListError] = useState("");
-  const [actionError, setActionError] = useState("");
+  const [listError, setListError] = useState<ErrorInfo | null>(null);
+  const [actionError, setActionError] = useState<ErrorInfo | null>(null);
   const [notice, setNotice] = useState("");
-  const [busyDate, setBusyDate] = useState<string | null>(null);
   const [form, setForm] = useState<PriceForm | null>(null);
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
-
-  // A User only ever sees Active prices
-  const effectiveTab: Tab = privileged ? tab : "active";
-  const error = actionError || listError;
+  // Confirm-delete state: the price waiting for a yes, and what happened when we asked the server
+  const [pendingDelete, setPendingDelete] = useState<ApiPrice | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<ErrorInfo | null>(null);
 
   useEffect(() => {
     const dialog = ref.current;
@@ -67,22 +64,23 @@ function PriceHistoryDialog({
   useEffect(() => {
     let stale = false;
     priceApi
-      .list(demo, code, effectiveTab)
+      .list(demo, code)
       .then((res) => {
         if (stale) return;
         setData(res);
-        setListError("");
+        setListError(null);
       })
       .catch((err) => {
-        if (!stale) setListError(errorMessage(err));
+        if (!stale) setListError(describeError(err));
       });
     return () => {
       stale = true;
     };
-  }, [demo, code, effectiveTab, reloadKey]);
+  }, [demo, code, reloadKey]);
 
+  const reload = () => setReloadKey((k) => k + 1);
   const changed = () => {
-    setReloadKey((k) => k + 1);
+    reload();
     onChanged();
   };
 
@@ -117,15 +115,16 @@ function PriceHistoryDialog({
     try {
       if (form.mode === "edit") {
         await priceApi.update(demo, code, form.effDate, { unitPrice: amount });
-        setNotice(`Saved the price effective ${form.effDate}.`);
+        setNotice(`Saved the price starting ${form.effDate}.`);
       } else {
         await priceApi.add(demo, code, {
           effDate: form.effDate,
           unitPrice: amount,
         });
-        setNotice(`Added a price effective ${form.effDate}.`);
+        setNotice(`Added a price starting ${form.effDate}.`);
       }
       setForm(null);
+      setActionError(null);
       changed();
     } catch (err) {
       setFormError(saveMessage(err)); // the form stays open so nothing typed is lost
@@ -134,245 +133,248 @@ function PriceHistoryDialog({
     }
   };
 
-  // ---------- soft delete and restore ----------
-  const softDelete = async (p: ApiPrice) => {
-    const ok = window.confirm(
-      `Delete the price of ${money(p.unitPrice)} effective ${p.effDate}?\n\nIt will be marked Inactive${
-        privileged ? " and can be restored later." : "."
-      }`,
-    );
-    if (!ok) return;
-    await run(
-      p.effDate,
-      () => priceApi.remove(demo, code, p.effDate),
-      `Deleted the price effective ${p.effDate}.`,
-    );
-  };
-  const restore = (p: ApiPrice) =>
-    run(
-      p.effDate,
-      () => priceApi.restore(demo, code, p.effDate),
-      `Restored the price effective ${p.effDate}.`,
-    );
-
-  const run = async (
-    effDate: string,
-    action: () => Promise<unknown>,
-    success: string,
-  ) => {
-    setBusyDate(effDate);
-    setActionError("");
+  // ---------- delete (permanent, so it asks first) ----------
+  const askDelete = (p: ApiPrice) => {
+    setDeleteError(null);
+    setActionError(null);
     setNotice("");
+    setPendingDelete(p);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete || deleting) return;
+    setDeleting(true);
+    setDeleteError(null);
     try {
-      await action();
-      setNotice(success);
+      await priceApi.remove(demo, code, pendingDelete.effDate);
+      setNotice(`Deleted the price starting ${pendingDelete.effDate}.`);
+      setPendingDelete(null);
       changed();
     } catch (err) {
-      setActionError(errorMessage(err));
-      setReloadKey((k) => k + 1); // someone else may have changed it: show what is really there
+      // e.g. "earlier sales would be left without a price": shown inside the confirm dialog
+      setDeleteError(describeError(err));
+      reload(); // someone else may have changed it: show what is really there
     } finally {
-      setBusyDate(null);
+      setDeleting(false);
     }
   };
 
-  // Defensive: a User never sees a deleted price, whatever the server sent
-  const rows = (data?.prices ?? []).filter(
-    (p) => privileged || p.status === "Active",
-  );
-  const current = currentEffDate(rows);
-  const colCount = 3 + (privileged ? 2 : 0);
-  const loading = data === null && !error;
+  const rows = data?.prices ?? [];
+  const showActions = can.edit || can.remove;
+  const colCount = showActions ? 3 : 2;
+  const loading = data === null && !listError;
 
   return (
-    <dialog
-      ref={ref}
-      onClose={onClose}
-      aria-labelledby="price-history-title"
-      className="m-auto max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white p-0 text-dark shadow-lg backdrop:bg-dark/60"
-    >
-      <header className="border-b border-light-grey p-6">
-        <h2 id="price-history-title" className="text-2xl font-bold">
-          Price history · {code}
-        </h2>
-        <p className="mt-1 text-sm text-dark-grey">
-          {product.description} · Unit: {unitLabels[product.unit]}
-        </p>
-      </header>
-
-      <div className="flex flex-col gap-4 p-6">
-        {error && (
-          <p
-            role="alert"
-            className="rounded-md bg-red-200 px-4 py-2 text-red-800"
-          >
-            {error}
+    <>
+      <dialog
+        ref={ref}
+        onClose={onClose}
+        aria-labelledby="price-history-title"
+        className="m-auto max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white p-0 text-dark shadow-lg backdrop:bg-dark/60"
+      >
+        <header className="border-b border-light-grey p-6">
+          <h2 id="price-history-title" className="text-2xl font-bold">
+            Price history · {code}
+          </h2>
+          <p className="mt-1 text-sm text-dark-grey">
+            {product.description} · Unit: {unitLabels[product.unit]}
           </p>
-        )}
-        {notice && (
-          <p
-            role="status"
-            className="rounded-md bg-green-300 px-4 py-2 text-green-800"
-          >
-            {notice}
-          </p>
-        )}
+        </header>
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {privileged ? (
-            <StatusTabs
-              label="Price status"
-              tab={tab}
-              counts={data?.counts}
-              onChange={setTab}
+        <div className="flex flex-col gap-4 p-6">
+          {/* Error state: a failed refresh keeps the old table and says why */}
+          {listError && data && (
+            <ErrorBanner
+              title={listError.title}
+              message={listError.message}
+              onRetry={reload}
             />
-          ) : (
-            <span />
           )}
-          {can.add && !form && (
-            <button
-              type="button"
-              onClick={openAdd}
-              className="flex items-center gap-2 rounded-md bg-fire px-4 py-2 text-white shadow-lg hover:bg-fire-light"
+          {actionError && (
+            <ErrorBanner
+              title={actionError.title}
+              message={actionError.message}
+              onDismiss={() => setActionError(null)}
+            />
+          )}
+          {notice && (
+            <p
+              role="status"
+              className="rounded-md bg-green-300 px-4 py-2 text-green-800"
             >
-              <i className="fa-solid fa-plus" aria-hidden="true" />
-              Add price
-            </button>
+              {notice}
+            </p>
           )}
-        </div>
 
-        {/*----------Add / edit form----------*/}
-        {form && (
-          <form
-            onSubmit={submit}
-            className="flex flex-col gap-4 rounded-xl bg-paper p-4"
-            noValidate
-          >
-            <h3 className="text-lg font-bold">
-              {form.mode === "edit"
-                ? `Edit price effective ${form.effDate}`
-                : "Add price"}
-            </h3>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1">
-                <TextField
-                  id="price-effdate"
-                  label="Effective date"
-                  type="date"
-                  value={form.effDate}
-                  // The date is part of the key and old sales depend on it, so it cannot change
-                  disabled={form.mode === "edit"}
-                  onChange={(e) =>
-                    setForm({ ...form, effDate: e.target.value })
-                  }
-                />
-                <p className="text-sm text-dark-grey">
-                  {form.mode === "edit"
-                    ? "To change the date, delete this price and add a new one."
-                    : "The price applies from this date. A future date is allowed."}
-                </p>
-              </div>
-              <TextField
-                id="price-unitprice"
-                label="Unit price (USD)"
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0.01"
-                placeholder="0.00"
-                value={form.unitPrice}
-                onChange={(e) =>
-                  setForm({ ...form, unitPrice: e.target.value })
-                }
-              />
-            </div>
-            {formError && (
-              <p role="alert" className="text-sm text-red-800">
-                {formError}
-              </p>
-            )}
-            <div className="flex justify-end gap-3">
+          {can.add && !form && (
+            <div className="flex justify-end">
               <button
                 type="button"
-                onClick={() => setForm(null)}
-                className="rounded-md border border-light-grey bg-white px-4 py-2 hover:bg-light-grey"
+                onClick={openAdd}
+                className="flex items-center gap-2 rounded-md bg-fire px-4 py-2 text-white shadow-lg hover:bg-fire-light"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded-md bg-fire px-4 py-2 text-white shadow-lg hover:bg-fire-light disabled:opacity-60"
-              >
-                {form.mode === "edit" ? "Save price" : "Add price"}
+                <i className="fa-solid fa-plus" aria-hidden="true" />
+                Add price
               </button>
             </div>
-          </form>
-        )}
+          )}
 
-        {/*----------Table----------*/}
-        <div className="overflow-x-auto rounded-xl bg-paper p-2 shadow-lg">
-          <table className="w-full min-w-[30rem] text-left">
-            <caption className="sr-only">Price history of {code}</caption>
-            <thead className="text-sm text-dark-grey">
-              <tr>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Effective date
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Unit price
-                </th>
-                {privileged && (
-                  <th scope="col" className="px-4 py-3 font-semibold">
-                    Status
-                  </th>
-                )}
-                {privileged && (
-                  <th scope="col" className="px-4 py-3 font-semibold">
-                    Stamp
-                  </th>
-                )}
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading && (
-                <tr className="border-t border-light-grey">
-                  <td
-                    colSpan={colCount}
-                    className="px-4 py-8 text-center text-dark-grey"
-                  >
-                    Loading prices...
-                  </td>
-                </tr>
+          {/*----------Add / edit form----------*/}
+          {form && (
+            <form
+              onSubmit={submit}
+              className="flex flex-col gap-4 rounded-xl bg-paper p-4"
+              noValidate
+            >
+              <h3 className="text-lg font-bold">
+                {form.mode === "edit"
+                  ? `Edit price starting ${form.effDate}`
+                  : "Add price"}
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1">
+                  <TextField
+                    id="price-effdate"
+                    label="Effective date"
+                    type="date"
+                    value={form.effDate}
+                    // The date identifies the price, so it cannot change
+                    disabled={form.mode === "edit"}
+                    onChange={(e) =>
+                      setForm({ ...form, effDate: e.target.value })
+                    }
+                  />
+                  <p className="text-sm text-dark-grey">
+                    {form.mode === "edit"
+                      ? "To change the date, delete this price and add a new one."
+                      : "The price applies from this date. A future date is allowed."}
+                  </p>
+                </div>
+                <TextField
+                  id="price-unitprice"
+                  label="Unit price (USD)"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.00"
+                  value={form.unitPrice}
+                  onChange={(e) =>
+                    setForm({ ...form, unitPrice: e.target.value })
+                  }
+                />
+              </div>
+              {formError && (
+                <p role="alert" className="text-sm text-red-800">
+                  {formError}
+                </p>
               )}
-              {!loading && rows.length === 0 && (
-                <tr className="border-t border-light-grey">
-                  <td
-                    colSpan={colCount}
-                    className="px-4 py-8 text-center text-dark-grey"
-                  >
-                    No prices found for this product.
-                  </td>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setForm(null)}
+                  className="rounded-md border border-light-grey bg-white px-4 py-2 hover:bg-light-grey"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-md bg-fire px-4 py-2 text-white shadow-lg hover:bg-fire-light disabled:opacity-60"
+                >
+                  {form.mode === "edit" ? "Save price" : "Add price"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/*----------Table----------*/}
+          <div className="overflow-x-auto rounded-xl bg-paper p-2 shadow-lg">
+            <table className="w-full min-w-[24rem] text-left">
+              <caption className="sr-only">Price history of {code}</caption>
+              <thead className="text-sm text-dark-grey">
+                <tr>
+                  <th scope="col" className="px-4 py-3 font-semibold">
+                    Effective date
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold">
+                    Unit price
+                  </th>
+                  {showActions && (
+                    <th scope="col" className="px-4 py-3 font-semibold">
+                      Actions
+                    </th>
+                  )}
                 </tr>
-              )}
-              {rows.map((p) => {
-                const deleted = p.status === "Inactive";
-                const scheduled = !deleted && p.effDate > today();
-                return (
-                  <tr
-                    key={p.effDate}
-                    className={`border-t border-light-grey ${deleted ? "bg-cream" : ""}`}
-                  >
+              </thead>
+              <tbody>
+                {loading && (
+                  <tr className="border-t border-light-grey">
+                    <td
+                      colSpan={colCount}
+                      className="px-4 py-8 text-center text-dark-grey"
+                    >
+                      Loading prices...
+                    </td>
+                  </tr>
+                )}
+                {/* Error state, first load: the table itself explains and offers a retry */}
+                {listError && !data && (
+                  <tr className="border-t border-light-grey">
+                    <td colSpan={colCount}>
+                      <EmptyState
+                        icon="fa-triangle-exclamation"
+                        title="Couldn't load the prices"
+                        action={
+                          <button
+                            type="button"
+                            onClick={reload}
+                            className={actionButton}
+                          >
+                            Try again
+                          </button>
+                        }
+                      >
+                        {listError.message}
+                      </EmptyState>
+                    </td>
+                  </tr>
+                )}
+                {/* Empty state */}
+                {data && rows.length === 0 && (
+                  <tr className="border-t border-light-grey">
+                    <td colSpan={colCount}>
+                      <EmptyState
+                        icon="fa-tag"
+                        title="No prices yet"
+                        action={
+                          can.add && !form ? (
+                            <button
+                              type="button"
+                              onClick={openAdd}
+                              className={actionButton}
+                            >
+                              Add the first price
+                            </button>
+                          ) : undefined
+                        }
+                      >
+                        This product has no price, so the product list shows a
+                        dash as its current price.
+                      </EmptyState>
+                    </td>
+                  </tr>
+                )}
+                {rows.map((p) => (
+                  <tr key={p.effDate} className="border-t border-light-grey">
                     <td className="px-4 py-3">
                       <span className="font-semibold">{p.effDate}</span>
-                      {p.effDate === current && (
+                      {p.state === "Current" && (
                         <span className="ml-2 rounded-full border border-green-900 bg-green-300 px-2 py-0.5 text-xs font-semibold text-green-800">
                           Current
                         </span>
                       )}
-                      {scheduled && (
+                      {p.state === "Upcoming" && (
                         <span className="ml-2 rounded-full border border-dark-grey bg-cream px-2 py-0.5 text-xs font-semibold text-dark">
                           Scheduled
                         </span>
@@ -381,79 +383,75 @@ function PriceHistoryDialog({
                     <td className="px-4 py-3 font-semibold">
                       {money(p.unitPrice)}
                     </td>
-                    {privileged && (
+                    {showActions && (
                       <td className="px-4 py-3">
-                        <StatusBadge status={p.status} />
+                        <div className="flex flex-wrap gap-2">
+                          {can.edit && (
+                            <button
+                              type="button"
+                              onClick={() => openEdit(p)}
+                              aria-label={`Edit the price starting ${p.effDate}`}
+                              className={actionButton}
+                            >
+                              Edit
+                            </button>
+                          )}
+                          {can.remove && (
+                            <button
+                              type="button"
+                              onClick={() => askDelete(p)}
+                              aria-label={`Delete the price starting ${p.effDate}`}
+                              className={dangerButton}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
                       </td>
                     )}
-                    {privileged && (
-                      <td className="px-4 py-3 text-xs text-dark-grey">
-                        {p.stamp ?? "—"}
-                      </td>
-                    )}
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-2">
-                        {!deleted && can.edit && (
-                          <button
-                            type="button"
-                            onClick={() => openEdit(p)}
-                            disabled={busyDate === p.effDate}
-                            aria-label={`Edit the price effective ${p.effDate}`}
-                            className={actionButton}
-                          >
-                            Edit
-                          </button>
-                        )}
-                        {!deleted && can.remove && (
-                          <button
-                            type="button"
-                            onClick={() => softDelete(p)}
-                            disabled={busyDate === p.effDate}
-                            aria-label={`Delete the price effective ${p.effDate}`}
-                            className={dangerButton}
-                          >
-                            Delete
-                          </button>
-                        )}
-                        {deleted && can.remove && (
-                          <button
-                            type="button"
-                            onClick={() => restore(p)}
-                            disabled={busyDate === p.effDate}
-                            aria-label={`Restore the price effective ${p.effDate}`}
-                            className={actionButton}
-                          >
-                            Restore
-                          </button>
-                        )}
-                        {(deleted ? !can.remove : !can.edit && !can.remove) && (
-                          <span
-                            className="text-dark-grey"
-                            aria-label="No actions available"
-                          >
-                            —
-                          </span>
-                        )}
-                      </div>
-                    </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      <footer className="flex justify-end border-t border-light-grey p-6">
-        <button
-          type="button"
-          onClick={() => ref.current?.close()}
-          className="rounded-md border border-light-grey bg-white px-4 py-2 hover:bg-light-grey"
+        <footer className="flex justify-end border-t border-light-grey p-6">
+          <button
+            type="button"
+            onClick={() => ref.current?.close()}
+            className="rounded-md border border-light-grey bg-white px-4 py-2 hover:bg-light-grey"
+          >
+            Close
+          </button>
+        </footer>
+      </dialog>
+
+      {/* Confirm-delete state. A price is removed for good, so say so before it happens. */}
+      {pendingDelete && (
+        <ConfirmDialog
+          title="Delete this price?"
+          confirmLabel="Delete price"
+          busyLabel="Deleting..."
+          busy={deleting}
+          error={deleteError}
+          onConfirm={confirmDelete}
+          onCancel={() => !deleting && setPendingDelete(null)}
         >
-          Close
-        </button>
-      </footer>
-    </dialog>
+          <p>
+            The price of <b>{money(pendingDelete.unitPrice)}</b> starting{" "}
+            <b>{pendingDelete.effDate}</b> will be permanently removed.{" "}
+            <b>This cannot be undone.</b>
+          </p>
+          {pendingDelete.state === "Current" && (
+            <p className="mt-2 text-sm text-dark-grey">
+              It is the current price, so the product will fall back to the
+              price before it, if there is one.
+            </p>
+          )}
+        </ConfirmDialog>
+      )}
+    </>
   );
 }
 

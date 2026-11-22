@@ -1,105 +1,85 @@
 # Products & Price History: Hand-off Notes
 
-Hope, Inc. ERP · Group-5-SoftEng · front end only
+Hope, Inc. ERP · Group-5-SoftEng · front end
 
 ## Summary
 
-The Products screen and its Price History dialog are built and work end to end on demo data, with no backend needed. The page looks and behaves differently for User, Admin and Superadmin, following the Student Guide (sections 1.2 and 3.4) and this repo's rights model. The calls to the real server are written but untested, because the backend does not have the price, delete or restore routes yet.
+The Products screen and its Price History dialog work against the real back end (S2-DEV-04 to S2-DEV-08) and also on built-in demo data with no server. The page differs for User, Admin and Superadmin, and handles the three "other" states of every screen: empty, error and confirm-delete.
 
-## What was delivered
+## Files
 
-One existing file was replaced and six new files were added, all under `frontend/src/`.
+All under `frontend/src/`.
 
-| File | Status | Purpose |
-|---|---|---|
-| `pages/ProductsPage.tsx` | Replaced | The product list: search, unit filter, tabs, add, edit, delete, restore, Prices button |
-| `components/PriceHistoryDialog.tsx` | New | Price history per product, with add, edit, delete and restore |
-| `components/StatusBadge.tsx` | New | The green Active / red Inactive pill |
-| `components/StatusTabs.tsx` | New | Active / Inactive / All tabs with counts |
-| `lib/products.ts` | New | Shared types, role labels, styles and helpers (currency, today, current-price rule) |
-| `lib/demoProducts.ts` | New | Sample products and prices from the PDF, plus demo rights per previewed role |
-| `lib/productApi.ts` | New | One switch between the demo data and the real server calls |
-
-These existing files are imported by the new code and were not changed: `components/ProductDialog.tsx`, `components/TextField.tsx`, `lib/units.ts`, `lib/roles.ts`, `lib/api.ts`, `lib/useDismiss.ts` and `store/authStore.ts`. They are included in `products-feature.zip` (except `useDismiss.ts`, which is already in the repo) so the feature compiles on its own.
+| File | Purpose |
+|---|---|
+| `pages/ProductsPage.tsx` | The product list: search, unit filter, tabs, add, edit, delete, restore, Prices button |
+| `components/PriceHistoryDialog.tsx` | Price history of one product: add, edit, delete |
+| `components/ConfirmDialog.tsx` | Confirm-delete state: modal question before a destructive action |
+| `components/EmptyState.tsx` | Empty state: icon, title, one sentence, optional action button |
+| `components/ErrorBanner.tsx` | Error state: headline, detail, optional "Try again" / "Dismiss". Built on the shared `Alert` |
+| `components/StatusBadge.tsx`, `StatusTabs.tsx` | Active / Inactive pill and the Active / Inactive / All tabs (products only) |
+| `lib/errorInfo.ts` | `describeError()`: turns a thrown `ApiError` into `{ title, message }` |
+| `lib/products.ts` | Shared types, role labels, styles, `withStates()` helper |
+| `lib/productApi.ts` | One switch between demo data and the real routes; adapts the server's price shape |
+| `lib/demoProducts.ts` | Demo products and prices, and the demo rights for each previewed role |
 
 ## How to run and preview
 
-1. Make sure your checkout is current: `git pull origin main`.
-2. Confirm `frontend/src/App.tsx` routes `/products` to the real page: `import ProductsPage from "./pages/ProductsPage"` and `<Route path="/products" element={<ProductsPage />} />`.
-3. Run `npm run dev` inside `frontend/`.
-4. Log in with the demo account (`user@outlook.com` / `12345abcde`). A "Preview as User / Admin / Superadmin" switcher appears at the top of the page.
-
-If you see "This page is coming soon.", the route still points to the placeholder page. Fix the route as in step 2.
-
-Demo changes stay in the browser tab and reset on refresh.
+1. `git pull`, then `npm run dev` in `frontend/`.
+2. Log in with the demo account (`user@outlook.com` / `12345abcde`). A "Preview as User / Admin / Superadmin" switcher appears. Demo changes reset on refresh.
+3. A real account uses the real routes (back end running, `VITE_API_URL` set if not `localhost:3000`).
 
 ## How the page differs by role
 
 | | User | Admin | Superadmin |
 |---|---|---|---|
-| Rows | Active only | Active and deleted (shaded) | Active and deleted (shaded) |
-| Status and Stamp columns | Hidden | Shown | Shown |
-| Active / Inactive / All tabs | Hidden | Shown | Shown |
+| Product rows | Active only | Active and deleted (shaded) | Active and deleted (shaded) |
+| Status and Stamp columns, Active / Inactive / All tabs | Hidden | Shown | Shown |
 | Buttons | Only what their rights allow | Only what their rights allow | All of them |
 
-- Superadmin holds every right implicitly, matching `middleware/permission.js`. Admin and User only hold what the Rights dialog granted, read from `GET /api/menu` (tile code `PRODUCT`).
-- Rights used: `PRODUCT_ADD`, `PRODUCT_EDIT`, `PRODUCT_DELETE`, `PRICE_ADD`, `PRICE_EDIT`, `PRICE_DELETE`. The Delete right covers both delete and restore, the same convention as Customers.
-- Everyone who can open the page can see the Current Price column and open a product's price history. There is no "view price" right.
-- A deleted product shows only Restore. Its prices and details cannot be touched until it is restored.
-- Admin and Superadmin look the same on this screen, as in the PDF. They differ in the badge and in where rights come from.
+- Superadmin holds every right implicitly (`middleware/permission.js`). Admin and User only hold what the Rights dialog granted, read from `GET /api/menu`.
+- Rights: `PRODUCT_ADD`, `PRODUCT_EDIT`, `PRODUCT_DELETE`, `PRICE_ADD`, `PRICE_EDIT`, `PRICE_DELETE`. The Delete right covers delete and restore of products.
+- The Price History dialog is the same table for everyone; rights decide who sees Edit and Delete. Prices have no status, so no tabs or Status column.
+- A deleted product shows only Restore. Its prices cannot be changed until it is restored.
 
-## What the backend still needs
+## The three states
 
-The page expects these routes. The first four exist today; the rest are the next stories and follow the shape of the Customers routes. The full list is also in a comment above `productApi` in `lib/productApi.ts`.
+- **Empty state** (`EmptyState`): different messages for "no search match" (with a clear button), "no deleted products" (Inactive tab), "no products yet" (with an Add button if allowed) and "no prices yet".
+- **Error state** (`ErrorBanner`, `describeError`): a failed first load shows an error inside the table with "Try again". A failed refresh keeps the old rows and shows a banner. A refused restore shows a dismissible banner. Form errors stay inside the form so nothing typed is lost.
+- **Confirm-delete state** (`ConfirmDialog`): replaces `window.confirm`. Focus starts on Cancel, Escape is ignored while the request runs, and a refusal from the server (for example "cannot be deleted: it still has 2 price records") appears inside the dialog. Restore asks nothing because it loses nothing.
+
+## What the back end does (and what the screen relies on)
 
 | Route | Right | Notes |
 |---|---|---|
-| `GET /api/products?status=&search=&unit=&page=&pageSize=` | any | Add `currentPrice` and `stamp` to each product |
-| `POST /api/products` and `PATCH /api/products/:prodCode` | add / edit | Already exist |
-| `DELETE /api/products/:prodCode` | `PRODUCT_DELETE` | Soft delete. Refuse with 409 and a clear message if the product is on an active sale |
+| `GET /api/products` | any product right | `currentPrice` arrives as `{ unitPrice, effectiveDate }`; `productApi.ts` flattens it. No `stamp` is sent yet |
+| `POST /api/products`, `PATCH /api/products/:prodCode` | add / edit | |
+| `DELETE /api/products/:prodCode` | `PRODUCT_DELETE` | Soft delete. 409 `HAS_ACTIVE_CHILDREN` while the product has prices or sale lines |
 | `PATCH /api/products/:prodCode/restore` | `PRODUCT_DELETE` | |
-| `GET /api/products/:prodCode/prices?status=` | any | Returns `{ ok, prices: [{ effDate, unitPrice, status, stamp }], counts }` |
-| `POST /api/products/:prodCode/prices` | `PRICE_ADD` | Body `{ effDate, unitPrice }`. Duplicate date returns 409 |
-| `PATCH /api/products/:prodCode/prices/:effDate` | `PRICE_EDIT` | Body `{ unitPrice }` |
-| `DELETE /api/products/:prodCode/prices/:effDate` | `PRICE_DELETE` | Soft delete |
-| `PATCH /api/products/:prodCode/prices/:effDate/restore` | `PRICE_DELETE` | |
-
-Server rules that matter:
-
-- The server must filter out deleted rows for a plain User. The page also hides them, but that is only a convenience.
-- Check the role and the right on every request. Hiding a button is not security.
-- Add `status` and `stamp` columns to `PRICEHIST`. The product list also needs a stamp.
-- Errors should come back as `{ message }`, with an optional `errors` map per field. The page shows the first field error, otherwise the message.
-- Postgres can return numeric values as strings. The page converts them, so either form is fine.
+| `GET /api/products/:prodCode/prices` | any | `{ product, currentPrice, prices, total }`; each price is `{ prodCode, effectiveDate, unitPrice, state }` with state Current, Upcoming or Past |
+| `POST /api/products/:prodCode/prices` | `PRICE_ADD` | Body `{ effectiveDate, unitPrice }`. 409 `DATE_TAKEN` for a used date |
+| `PATCH /api/products/:prodCode/prices/:effDate` | `PRICE_EDIT` | The screen sends only `{ unitPrice }` |
+| `DELETE /api/products/:prodCode/prices/:effDate` | `PRICE_DELETE` | **Permanent.** There is no price soft delete and no price restore. 409 `PRICE_NEEDED_BY_SALES` if earlier sales would lose their price |
 
 ## Decisions to be aware of
 
-- Inactive and All tabs, Status and Stamp are now decided by role, as in the PDF. The old page showed them to anyone with the Delete right. This is a one-line change if the team prefers the old rule.
-- The effective date of a price cannot be edited, because it is part of the key and old sales depend on it. To change a date, delete the price and add a new one.
-- Unit price must be greater than zero with at most two decimals. The server should check again.
-- Prices are shown in USD, as in the PDF.
-- The current price is derived, not stored: the active price with the latest effective date that is not in the future. A future-dated active price shows a "Scheduled" badge.
-- The stamp is one text string from the server, such as `CREATED system 2026-10-01 9:00 AM`. The page shows it as is.
-- In demo mode, restoring writes a `RESTORED` stamp. The real server decides its own wording.
-- The search box and the unit filter follow the Customers design: a solid-color pill with no border or shadow, and a round filter icon that opens a panel of unit pills.
+- Price delete is permanent, so the confirmation says so and offers no restore. The Student Guide's price Status/Stamp/Restore was dropped because the price table has no such columns.
+- The effective date of a price cannot be edited in the screen (the API would allow it). To change a date, delete the price and add a new one.
+- Inactive and All tabs, Status and Stamp for products are decided by role, as in the PDF. The old page used the Delete right.
+- Unit price must be greater than zero with at most two decimals. Prices show in USD, as in the PDF.
+- The Stamp column shows a dash for real data until the product API sends a `stamp`.
+- The demo mirrors the server: deleting a product that has prices is refused, so add a new product (no prices) to try a successful delete.
 
 ## Testing done
 
-- TypeScript check, ESLint on all of `src`, and the production build all pass.
-- A throwaway test checked the User, Admin and Superadmin views on demo data: columns, tabs, hidden Delete buttons for a User, Restore, price add with validation, duplicate-date refusal, delete and restore of a price, and the unit filter.
-- That test was not committed, so the repo has no automated tests for this feature yet.
+- TypeScript, ESLint on all of `src`, and the production build pass.
+- A throwaway test covered both modes. Demo: empty states, clear button, confirm and refusal inside the dialog, cancel keeps the row, successful delete, permanent price delete, empty price list. Live (mocked server): unreachable server, retry, recovery, 409 shown inside the confirm dialog, price shape adapter, price DELETE request.
+- That test is not committed, so there are no automated tests for this screen yet.
 
-## Known gaps
+## Known gaps and next steps
 
-- Nothing has been tried against the real backend.
-- Demo data resets on every refresh.
-- The Payments screen is out of scope. It is in the ERD but has no screen.
-- No automated tests are committed.
-
-## Suggested next steps
-
-1. Build the missing backend routes above and add `currentPrice` and `stamp` to the product list.
-2. Turn the demo off for a real account by logging in normally, then test each role with real rights.
-3. Check that a User cannot fetch deleted rows or call delete, restore or price routes without the matching right.
-4. Add committed tests (for example Vitest and Testing Library) based on the cases listed under Testing done.
-5. Decide whether Superadmin should get anything extra on this screen, and whether prices should show in a different currency.
+1. Try the screen against the running back end with real rights for each role.
+2. Have the product API send `stamp` so Admins see it.
+3. Confirm a plain User cannot fetch deleted rows or call delete, restore or price routes without the right (the screen hides them, the server must enforce it).
+4. Commit tests based on the cases above (for example Vitest and Testing Library).
+5. `CustomersPage` still uses `window.confirm` and plain text for empty and error cases; it can adopt the three new components.
