@@ -1,0 +1,21 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DEV-05
+Task Name: Product create and edit form
+Assigned Team Member: Reb Emnacin (Developer)
+Sprint / Week: Sprint 2 / Week 4
+Objective: Build the frontend forms and backend API handlers for creating and editing product records while enforcing input validation, field lengths, and database unit_ck / NOT NULL constraints
+
+Test Case ID: TC-S2-DEV-05
+Test Component: Product Create & Edit Form
+Test Description: Verify that creating and editing products persists valid data in public.product and rejects blank required fields, invalid/uppercase units, or unauthorized requests.
+
+Test Steps:
+-Open the Create Product form, submit valid values (prodcode, description, lowercase unit), and verify persistence.
+-Open an existing product in the Edit Product form, update fields, and save changes.
+-Attempt to submit invalid units (e.g., 'PC', NULL), blank fields, or requests without create/edit permissions.   
+
+Expected Result: Valid product creates and updates save cleanly, while invalid inputs and unauthorized requests are blocked.
+Actual Result: Product create and edit forms, validation rules, and permission checks implemented and verified successfully
+
+Status: PASS ✅

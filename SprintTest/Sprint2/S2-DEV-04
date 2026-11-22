@@ -1,0 +1,24 @@
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DEV-04
+Task Name: Product list with search and filter
+Assigned Team Member: Reb Emnacin (Developer)
+Sprint / Week: Sprint 2 / Week 3
+Objective: Implement the Product Management directory screen with search and filtering capabilities for active products (public.active_products), backed by permission checks.
+
+Test Case ID: TC-S2-DEV-04
+Test Component: Product List Search & Filtering (S2-DEV-04)
+Test Description: Verify that authorized users can search active products by product code/description and filter by allowed units (pc, ea, mtr, pkg, ltr), 
+while soft-deleted products are excluded and unauthorized users are blocked.
+
+Test Steps:
+-Log in as an authorized user and open the Product Management directory
+-Search by prodcode (e.g., AM0001) or partial description and verify matching active records display.
+-Filter products by unit (pc, ea, mtr, pkg, ltr), then reset filters and verify unauthorized access is denied.
+
+Expected Result: Search and unit filters accurately return active products (deleted_at IS NULL), while archived products are hidden and unauthorized users
+cannot view product data.
+Actual Result: Product list search, unit filtering, and permission checks implemented and verified successfully.
+
+Status: PASS ✅
+
