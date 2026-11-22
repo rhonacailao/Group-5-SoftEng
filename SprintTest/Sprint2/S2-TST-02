@@ -1,0 +1,62 @@
+Task ID: S2-TST-02
+Task Name: Test cases: product and price history
+Assigned Team Member: Ian Carlo Balajadia
+Sprint / Week: Sprint 2
+Objective: Develop comprehensive test cases and verification scenarios for the Product Management and Effective-Date Price History modules—covering product catalog features, form validation, effective-date overlapping checks, and current-price resolution logic as of any given transaction date.
+
+TC-S2-TST-02-A: Product Catalog Search, Filtering & CRUD Validation
+Test Component: Product Management Module
+Test Description: Verify that product listing, search, unit filtering (pc, ea, mtr, pkg, ltr), create/edit forms, and soft delete/restore workflows enforce validation rules and unit_ck / NOT NULL constraints.
+
+Test Steps:
+-Search active products by prodcode or description and filter by allowed units (pc, ea, mtr, pkg, ltr).
+-Create and edit product records with valid attributes and confirm persistence in public.product.
+-Attempt invalid inputs (such as uppercase/disallowed units like 'PC', NULL unit, or oversized strings) and test soft delete (deleted_at) and restore (deleted_at = NULL) workflows.
+
+Expected Result: Valid product operations and filters succeed cleanly, invalid inputs/units are rejected, and soft-deleted products are excluded from active views while remaining restorable.
+Actual Result: Product catalog search/filtering, form/database unit_ck validations, and soft delete/restore flows verified successfully.
+
+Status: PASS ✅
+
+TC-S2-TST-02-B: Price History Entry & Effective-Date Boundary Resolution
+Test Component: Effective-Date Price History
+Test Description: Verify that price history queries and getProductPriceAsOf(productCode, asOfDate) resolve the latest effective unitprice (effdate <= asOfDate ORDER BY effdate DESC LIMIT 1) across pre-initial, mid-interval, exact boundary, and current dates.
+
+Test Steps:
+-Query historical entries for a multi-price product in public.pricehist (such as AM0001 with effdate 2010-05-15 at 36.45 and 2010-08-16 at 38.27).
+-Test lookup dates before the earliest effdate (e.g., 2010-01-01), between intervals (e.g., 2010-07-01), on an exact boundary date (e.g., 2010-08-16), and on a current/later date (e.g., 2026-11-22).
+-Verify getProductPriceAsOf trims/uppercases productCode and returns { productCode, effectiveDate, unitPrice } when matched or null when no effective price exists as of asOfDate.
+
+Expected Result: Pricing lookups return null prior to the first effective date, 36.45 for 2010-07-01, and 38.27 for both 2010-08-16 and 2026-11-22.
+Actual Result: Effective-date price resolution matches effdate <= target_date ordering across all tested date boundaries.
+
+Status: PASS ✅
+
+TC-S2-TST-02-C: Effective-Date Input & Overlap Validation Checks
+Test Component: Effective-Date Validation & Overlap Checks
+Test Description: Verify that invalid productCode lengths/formats, malformed or impossible calendar dates (e.g., 2026-02-30), and conflicting/overlapping effective-date entries are handled or rejected safely.
+
+Test Steps:
+-Call getProductPriceAsOf with an empty or > 6-character productCode and verify a TypeError is thrown ('productCode must be 1 to 6 characters').
+-Call getProductPriceAsOf with non-YYYY-MM-DD strings or invalid calendar dates (e.g., 2026-02-30) and verify a TypeError is thrown ('asOfDate must be a valid YYYY-MM-DD date').
+-Test price history entries with same-day or overlapping effective dates to verify deterministic ordering and conflict handling.
+
+Expected Result: Malformed codes and invalid dates throw TypeError immediately before querying public.pricehist, and effective-date lookups resolve deterministically
+Actual Result: Input type/date validation (TypeError) and effective-date resolution behaviors verified cleanly.
+Status: PASS ✅
+
+TC-S2-TST-02-D: Product & Price History Role-Based Permission Checks
+Test Component: Product & Price History Access Control
+Test Description: Verify that unauthorized users cannot access restricted product or price history actions via UI navigation or direct API requests, while authorized accounts retain full permitted access.
+
+Test Steps:
+-Log in with an account lacking product/pricing permissions and verify restricted UI controls/routes are hidden or blocked.
+-Send direct API requests for product/price endpoints using an unauthorized session and verify 403 Forbidden / 401 Unauthorized responses.
+-Log in with an authorized account and verify normal catalog, form, soft delete/restore, and price lookup behavior.
+
+Expected Result: Unauthorized users are blocked at both UI and API layers, while authorized users complete product and price history operations without issue.
+Actual Result: Role-based access restrictions and authorized workflows verified across product and price history features
+
+Status: PASS ✅
+
+
