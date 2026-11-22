@@ -62,3 +62,16 @@
     @apply font-sans text-dark bg-white;
   }
 }
+
+/*
+ * Browser autofill paints saved logins pale blue (#E8F0FE in Chrome), overriding the
+ * input background. Delaying the background transition keeps the brown input color.
+ * Kept outside @layer so it beats utility classes such as transition-colors.
+ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--color-dark);
+  transition: background-color 600000s ease-in-out 0s;
+}
