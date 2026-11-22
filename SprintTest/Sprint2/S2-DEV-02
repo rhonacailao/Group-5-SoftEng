@@ -1,0 +1,20 @@
+
+Verified and tested by: Ian Carlo A. Balajadia
+
+Task ID: S2-DEV-02
+Task Name: Customer create and edit form
+Assigned Team Member: Reb Emnacin (Developer)
+Sprint / Week: Sprint 2 / Week 3   
+Objective: Build the frontend forms and backend API handlers for creating new customer records and editing existing customer profiles, enforcing input validation and database constraints (payterm, field lengths, permissions).
+
+Test Case ID: TC-S2-DEV-02
+Test Component: Customer Create & Edit Form (S2-DEV-02)
+Test Description: Verify that users with create/edit rights can add new customers and update existing customer details, while invalid inputs and unauthorized submissions are rejected.
+Test Steps:
+-Open the Add Customer form, enter valid details (custno, custname, address, payterm), and submit.  
+-Open an existing customer in the Edit Customer form, modify fields, and save changes.
+-Attempt to submit blank required fields, invalid payment terms, or requests from an account lacking customer create/edit permissions.
+
+Expected Result: Valid customer creations and edits persist accurately in public.customer, while invalid payloads and unauthorized requests are rejected.
+Actual Result: Customer create and edit forms along with validation and permission checks implemented and verified successfully.
+Status: PASS ✅
