@@ -34,7 +34,19 @@ export const productApi = {
     });
     if (p.search.trim()) params.set("search", p.search.trim());
     if (p.unit) params.set("unit", p.unit);
-    return api<ListResponse>(`/api/products?${params}`);
+    // S2-DEV-08: the server sends currentPrice as { unitPrice, effectiveDate } (or null); the
+    // table only needs the amount, so it is flattened to a number here.
+    return api<ListResponse>(`/api/products?${params}`).then((res) => ({
+      ...res,
+      products: res.products.map((p) => {
+        const price: unknown = p.currentPrice;
+        const amount =
+          price !== null && typeof price === "object" && "unitPrice" in price
+            ? (price as { unitPrice: number }).unitPrice
+            : (p.currentPrice ?? null);
+        return { ...p, currentPrice: amount };
+      }),
+    }));
   },
   create: (
     demo: boolean,
