@@ -42,39 +42,7 @@
 
 ---
 
-## 3. Velocity Analysis
-
-### Team velocity
-
-| Measure | Value |
-|---|---|
-| Planned pace | 3.0 PRs/day (30 PRs over 10 days) |
-| Actual pace, Week 3 | 2.0 PRs/day (10 PRs over 5 days) |
-| Week 3 completion vs. plan | 60% (9 of 15 due in Week 3) |
-| PRs remaining | 20 (6 carried over from Week 3 + 14 remaining in Week 4) |
-| Pace needed to finish | 4.0 PRs/day |
-| Projected total at current pace | 20 of 30 (67%) |
-
-### Velocity by role
-
-| Role | Planned | Merged | Remaining | Needed per day | Projected at current pace | Role minimum | Target |
-|---|---|---|---|---|---|---|---|
-| Developer | 8 | 5 | 3 | 0.6 | 10 *(capped at 8)* | 5 | 8 |
-| DB Admin | 6 | 2 | 4 | 0.8 | 4 | 4 | 6 |
-| Tester | 6 | 0 | 6 | 1.2 | 0 | 4 | 6 |
-| UI/UX Designer | 5 | 1 | 4 | 0.8 | 2 | 3 | 5 |
-| Scrum Master | 5 | 2 | 3 | 0.6 | 4 | 3 | 5 |
-| **Team** | **30** | **10** | **20** | **4.0** | **20** | | **30** |
-
-### Observations
-- **Developer momentum is strong:** The Developer has already completed 5 of 8 PRs (63%), including all Week 3 tasks (`S2-DEV-01` through `S2-DEV-04`) plus `S2-DEV-05` ahead of its Day 6 deadline.
-- **Testing has zero merged PRs:** All 6 Tester tasks (`S2-TST-01` through `S2-TST-06`) are currently `Not started`, requiring a pace of 1.2 PRs/day in Week 4 to hit the target.
-- **Non-working days impact:** The implemented non-working days (November 16–18) caused a late start across several roles, resulting in 6 overdue tasks from Week 3.
-- **UI/UX bottleneck:** UI/UX progress stalled after `S2-UIX-01` due to Git branch pushing issues, leaving `S2-UIX-02` and `S2-UIX-03` overdue.
-
----
-
-## 4. Check Notes
+## 3. Check Notes
 
 **Went well**
 - Customer module backend and frontend core features (`S2-DEV-01`, `S2-DEV-02`, `S2-DEV-03`) and foundational DB views/queries (`S2-DBA-01`, `S2-DBA-02`) are merged.
@@ -98,7 +66,7 @@
 
 ---
 
-## 5. Impediment Log
+## 4. Impediment Log
 
 | ID | Impediment | Category | Affected tasks | Impact | Severity | Mitigation / next action |
 |---|---|---|---|---|---|---|
@@ -108,7 +76,7 @@
 
 ---
 
-## 6. Next Check-in
+## 5. Next Check-in
 
 - **Daily sync:** Every day starting Day 6 to monitor catch-up on Week 3 carry-over tasks.
 - **Impediment review:** Day 7 (verify Vercel deployment fix and UI/UX PR submissions).
