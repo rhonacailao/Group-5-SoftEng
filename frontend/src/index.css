@@ -2,11 +2,47 @@
 
 @font-face {
   font-family: Avenir;
-  src: url("../src/assets/fonts/Avenir\ Next\ Regular.woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: url("../src/assets/fonts/Avenir\ Next\ Light.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Avenir;
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("../src/assets/fonts/Avenir\ Next\ Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Avenir;
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+  src: url("../src/assets/fonts/Avenir\ Next\ Italic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Avenir;
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url("../src/assets/fonts/Avenir\ Next\ Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Avenir;
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("../src/assets/fonts/Avenir\ Next\ Bold.woff2") format("woff2");
 }
 
 @theme {
-  --font-avenir: Avenir, sans-serif;
+  --font-sans: Avenir, ui-sans-serif, system-ui, sans-serif;
+  --font-avenir: var(--font-sans);
   --color-white: #f5f5f5;
   --color-fire: #ea5c1f;
   --color-fire-light: #ed9555;
@@ -23,6 +59,6 @@
   }
 
   body {
-    @apply text-dark bg-white;
+    @apply font-sans text-dark bg-white;
   }
 }
