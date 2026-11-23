@@ -1,11 +1,11 @@
 import * as customerService from '../services/customer.service.js';
 
 export async function list(req, res) {
-  res.json({ ok: true, ...(await customerService.list(req.query)) });
+  res.json({ ok: true, ...(await customerService.list(req.query, req.user)) });
 }
 
 export async function get(req, res) {
-  res.json({ ok: true, customer: await customerService.get(req.params.custNo) });
+  res.json({ ok: true, customer: await customerService.get(req.params.custNo, req.user) });
 }
 
 export async function nextNumber(req, res) {

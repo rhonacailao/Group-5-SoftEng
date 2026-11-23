@@ -1,7 +1,7 @@
 import * as priceService from '../services/price.service.js';
 
 export async function list(req, res) {
-  res.json({ ok: true, ...(await priceService.list(req.params.prodCode)) });
+  res.json({ ok: true, ...(await priceService.list(req.params.prodCode, req.user)) });
 }
 
 export async function create(req, res) {
