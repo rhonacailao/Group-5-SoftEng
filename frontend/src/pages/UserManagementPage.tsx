@@ -4,13 +4,7 @@ import RightsDialog from "../components/RightsDialog";
 import Card from "../components/Card";
 import Badge, { type BadgeVariant } from "../components/Badge";
 import { api, errorMessage } from "../lib/api";
-import {
-  canManage,
-  emptyRights,
-  isSuperadmin,
-  type Rights,
-  type Role,
-} from "../lib/roles";
+import { canManage, isSuperadmin, type Role } from "../lib/roles";
 
 // One row as the back end sends it (GET /api/users).
 type ApiUser = {
@@ -32,7 +26,6 @@ type ManagedUser = {
   status: ApiUser["status"];
   blocked: boolean;
   awaitingApproval: boolean;
-  rights: Rights; // placeholder: the Rights dialog is not connected to /api/rights yet
 };
 
 const toManaged = (u: ApiUser): ManagedUser => ({
@@ -43,7 +36,6 @@ const toManaged = (u: ApiUser): ManagedUser => ({
   status: u.status,
   blocked: u.isBlocked,
   awaitingApproval: u.awaitingApproval,
-  rights: emptyRights(),
 });
 
 const roleVariant: Record<Role, BadgeVariant> = {
@@ -60,6 +52,7 @@ function UserManagementPage() {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [editingRights, setEditingRights] = useState<ManagedUser | null>(null);
 
   // Ask the back end for the list. Admins never receive Superadmin rows from the server.
@@ -126,12 +119,11 @@ function UserManagementPage() {
     }
   };
 
-  const saveRights = (rights: Rights) => {
-    if (!editingRights) return;
-    setUsers((list) =>
-      list.map((u) => (u.id === editingRights.id ? { ...u, rights } : u)),
-    );
+  // The dialog already saved the rights on the server (PUT /api/users/:id/rights)
+  const rightsSaved = () => {
+    const name = editingRights?.name ?? "the user";
     setEditingRights(null);
+    setNotice(`Saved the rights of ${name}. They apply on their next click.`);
   };
 
   const description = isSuperadmin(viewerRole)
@@ -162,6 +154,11 @@ function UserManagementPage() {
           className="mb-4 rounded-md bg-red-200 px-4 py-2 text-red-800"
         >
           {error}
+        </p>
+      )}
+      {notice && (
+        <p role="status" className="mb-4 rounded-md bg-green-200 px-4 py-2 text-green-800">
+          {notice}
         </p>
       )}
       {loading && <p className="mb-4 text-dark-grey">Loading users...</p>}
@@ -256,7 +253,10 @@ function UserManagementPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => setEditingRights(u)}
+                          onClick={() => {
+                            setNotice("");
+                            setEditingRights(u);
+                          }}
                           className={actionButton}
                         >
                           Rights
@@ -278,9 +278,9 @@ function UserManagementPage() {
 
       {editingRights && (
         <RightsDialog
+          userId={editingRights.id}
           personName={editingRights.name}
-          initialRights={editingRights.rights}
-          onSave={saveRights}
+          onSaved={rightsSaved}
           onClose={() => setEditingRights(null)}
         />
       )}
