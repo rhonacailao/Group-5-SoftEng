@@ -1,11 +1,11 @@
 import * as productService from '../services/product.service.js';
 
 export async function list(req, res) {
-  res.json({ ok: true, ...(await productService.list(req.query)) });
+  res.json({ ok: true, ...(await productService.list(req.query, req.user)) });
 }
 
 export async function get(req, res) {
-  res.json({ ok: true, product: await productService.get(req.params.prodCode) });
+  res.json({ ok: true, product: await productService.get(req.params.prodCode, req.user) });
 }
 
 export async function create(req, res) {
