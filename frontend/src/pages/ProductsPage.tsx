@@ -9,6 +9,7 @@ import PriceHistoryDialog, {
   type PriceCan,
 } from "../components/PriceHistoryDialog";
 import StatusBadge from "../components/StatusBadge";
+import Stamp from "../components/Stamp";
 import StatusTabs from "../components/StatusTabs";
 import { DEMO_RIGHTS } from "../lib/demoProducts";
 import { describeError, type ErrorInfo } from "../lib/errorInfo";
@@ -615,8 +616,8 @@ function ProductsPage() {
                     </td>
                   )}
                   {privileged && (
-                    <td className="px-4 py-3 text-xs text-dark-grey">
-                      {p.stamp ?? "—"}
+                    <td className="px-4 py-3">
+                      <Stamp value={p.stamp} />
                     </td>
                   )}
                   <td className="px-4 py-3">

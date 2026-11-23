@@ -1,7 +1,9 @@
 import { pool, withTransaction } from '../config/db.js';
 import * as products from '../repositories/product.repository.js';
 import * as prices from '../repositories/price.repository.js';
+import * as audit from '../repositories/audit.repository.js';
 import { HttpError } from '../utils/httpError.js';
+import { addStamps } from './stamp.service.js';
 
 export async function getProductPriceAsOf(productCode, asOfDate) {
   const code = String(productCode ?? '').trim().toUpperCase();
@@ -130,11 +132,12 @@ async function assertSalesStillPriced(db, prodCode, before, action) {
 }
 
 // GET /api/products/:prodCode/prices : the whole history, newest effective date first
-export async function list(rawProdCode) {
+export async function list(rawProdCode, viewer) {
   const prodCode = parseProdCode(rawProdCode);
   const product = await products.findByCode(prodCode);
   if (!product) throw new HttpError(404, 'Product not found');
-  const history = await prices.listByProduct(prodCode);
+  // A price is identified in the audit log by 'effective date|product code'
+  const history = await addStamps(await prices.listByProduct(prodCode), 'pricehist', (p) => `${p.effectiveDate}|${p.prodCode}`, viewer);
   const current = history.find((price) => price.state === 'Current') ?? null; // S2-DEV-08
   return {
     product,
@@ -190,7 +193,23 @@ export async function update(actor, rawProdCode, rawEffDate, body) {
       if (err.code === '23505') throw dateTaken(prodCode, next.effectiveDate);
       throw err;
     }
-    if (movesDate) await assertSalesStillPriced(db, prodCode, unpricedBefore, 'moved to that date');
+    if (movesDate) {
+      await assertSalesStillPriced(db, prodCode, unpricedBefore, 'moved to that date');
+      // The database trigger files this EDIT under the OLD date (that is the key the row had).
+      // A price is looked up by its NEW date, so the log needs one line under the new key too;
+      // without it the moved price would show up as never edited.
+      await audit.write(
+        {
+          tableName: 'pricehist',
+          action: 'EDIT',
+          recordKey: `${saved.effectiveDate}|${prodCode}`,
+          oldValues: { effectiveDate: current.effectiveDate },
+          newValues: { effectiveDate: saved.effectiveDate },
+          actor,
+        },
+        db,
+      );
+    }
     return saved;
   });
 }

@@ -1,6 +1,7 @@
 import { withTransaction } from '../config/db.js';
 import * as products from '../repositories/product.repository.js';
 import * as audit from '../repositories/audit.repository.js';
+import { addStamps } from './stamp.service.js';
 import { HttpError } from '../utils/httpError.js';
 import { escapeLike, toInt } from '../utils/validators.js';
 
@@ -13,7 +14,7 @@ function badFilter(field, message) {
 }
 
 // S2-DEV-04: GET /api/products?search=&unit=&status=&page=&pageSize=
-export async function list(query) {
+export async function list(query, viewer) {
   const page = toInt(query.page, 1, 1, 1_000_000);
   const pageSize = toInt(query.pageSize, 20, 1, 100);
 
@@ -44,7 +45,8 @@ export async function list(query) {
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
-  return { products: rows, total, counts, page, pageSize };
+  const withStamps = await addStamps(rows, 'product', (p) => p.prodCode, viewer);
+  return { products: withStamps, total, counts, page, pageSize };
 }
 
 // ---------- S2-DEV-05: create and edit ----------
@@ -114,10 +116,10 @@ function parseProdCode(raw) {
 }
 
 // GET /api/products/:prodCode : fills the edit form
-export async function get(rawProdCode) {
+export async function get(rawProdCode, viewer) {
   const product = await products.findByCode(parseProdCode(rawProdCode), undefined, { withPrice: true });
   if (!product) throw new HttpError(404, 'Product not found');
-  return product;
+  return (await addStamps([product], 'product', (p) => p.prodCode, viewer))[0];
 }
 
 // POST /api/products

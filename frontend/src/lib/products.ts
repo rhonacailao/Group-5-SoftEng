@@ -14,8 +14,15 @@ export type ApiProduct = {
   status: Status;
   /** Price in force today, from PRICEHIST. null / missing = no price yet. Postgres may send a string. */
   currentPrice?: number | string | null;
-  /** "CREATED system 2026-10-01 9:00 AM". Only needed for Admin and Superadmin. */
-  stamp?: string;
+  /** Last action on the row. Only Admin and Superadmin get it; the demo data uses one line of text. */
+  stamp?: ApiStamp | string;
+};
+
+// Who did the last thing to a row (from the audit log). date is null for sample data nobody touched.
+export type ApiStamp = {
+  action: "CREATED" | "EDITED" | "DELETED" | "RESTORED" | string;
+  user: string;
+  date: string | null;
 };
 
 // Where a price sits in time, worked out by the server (price.repository.js):
