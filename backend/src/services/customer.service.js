@@ -1,6 +1,7 @@
 import { withTransaction } from '../config/db.js';
 import * as customers from '../repositories/customer.repository.js';
 import * as audit from '../repositories/audit.repository.js';
+import { addStamps } from './stamp.service.js';
 import { HttpError } from '../utils/httpError.js';
 import { escapeLike, toInt } from '../utils/validators.js';
 
@@ -13,7 +14,7 @@ function badFilter(field, message) {
 }
 
 // S2-DEV-01: GET /api/customers?search=&payTerm=&status=&page=&pageSize=
-export async function list(query) {
+export async function list(query, viewer) {
   const page = toInt(query.page, 1, 1, 1_000_000);
   const pageSize = toInt(query.pageSize, 20, 1, 100);
 
@@ -44,7 +45,8 @@ export async function list(query) {
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
-  return { customers: rows, total, counts, page, pageSize };
+  const withStamps = await addStamps(rows, 'customer', (c) => c.custNo, viewer);
+  return { customers: withStamps, total, counts, page, pageSize };
 }
 
 // ---------- S2-DEV-02: create and edit ----------
@@ -111,10 +113,10 @@ function assertNumberLeft(n) {
 }
 
 // GET /api/customers/:custNo : fills the edit form
-export async function get(rawCustNo) {
+export async function get(rawCustNo, viewer) {
   const customer = await customers.findByNo(parseCustNo(rawCustNo));
   if (!customer) throw new HttpError(404, 'Customer not found');
-  return customer;
+  return (await addStamps([customer], 'customer', (c) => c.custNo, viewer))[0];
 }
 
 // GET /api/customers/next-number : shows "Customer no. C0083" on the Add form.
