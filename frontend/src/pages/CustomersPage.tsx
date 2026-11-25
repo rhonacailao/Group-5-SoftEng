@@ -302,17 +302,12 @@ function CustomersPage() {
   const loadFailed = listError !== null && data === null;
   const filtering = query.trim() !== "" || payTerm !== "";
 
-  const description = canDelete
-    ? "Add, edit, delete and restore customers. Deleted customers stay here as Inactive."
-    : "Search, add and edit customers.";
-
   return (
     <section aria-labelledby="customers-title" className="flex flex-col gap-6">
       <header>
         <h1 id="customers-title" className="text-5xl font-bold leading-none">
           Customers
         </h1>
-        <p className="mt-3 text-sm text-dark-grey">{description}</p>
       </header>
 
       {isDemo && (

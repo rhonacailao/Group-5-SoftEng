@@ -10,6 +10,7 @@ import PlaceholderPage from "./pages/PlaceholderPage";
 import ProductsPage from "./pages/ProductsPage";
 import AccountPage from "./pages/AccountPage";
 import CustomersPage from "./pages/CustomersPage";
+import HumanResourcesPage from "./pages/HumanResourcesPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import SystemSettingsPage from "./pages/SystemSettingsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -41,10 +42,7 @@ function App() {
 
           {/* Admin and Superadmin */}
           <Route element={<RoleRoute allow={["admin", "superadmin"]} />}>
-            <Route
-              path="/human-resources"
-              element={<PlaceholderPage title="Human Resources" />}
-            />
+            <Route path="/human-resources" element={<HumanResourcesPage />} />
             <Route path="/user-management" element={<UserManagementPage />} />
           </Route>
 
