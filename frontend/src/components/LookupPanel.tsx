@@ -1,20 +1,44 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { api, ApiError, errorMessage } from "../lib/api";
 import ConfirmDialog from "./ConfirmDialog";
-import LookupDialog, { type LookupDialogValues } from "./LookupDialog";
+import LookupDialog, {
+  type LookupDialogValues,
+  type LookupField,
+} from "./LookupDialog";
 import EmptyState from "./EmptyState";
 import ErrorBanner from "./ErrorBanner";
 import Card from "./Card";
 import Badge from "./Badge";
 import { describeError, type ErrorInfo } from "../lib/errorInfo";
 import type {
-  DemoLookupRow,
   DemoStore,
   LookupListResponse,
+  LookupRow,
   LookupTab,
 } from "../lib/demoHumanResources";
 
-/** Everything that differs between the Jobs tab and the Departments tab. */
+/** A table column after the code column. */
+export type LookupColumn = {
+  /** Field of the row to show, e.g. "lastName" */
+  key: string;
+  label: string;
+  align?: "right";
+  /** Keep a date or a number on one line */
+  nowrap?: boolean;
+  /** Hide this column on screens narrower than this (Tailwind breakpoint), so the table fits a phone */
+  hideBelow?: "md" | "lg" | "xl";
+  /** Custom cell, for values that need formatting. Empty values show as a dash. */
+  render?: (row: LookupRow) => ReactNode;
+};
+
+/** A form field. `lockedOnEdit` fields are typed when adding and shown in the subtitle when editing. */
+export type LookupFieldDef = LookupField & { lockedOnEdit?: boolean };
+
+/**
+ * Everything that differs between the Jobs, Departments and Employees tabs (and the job history
+ * of one employee). Jobs and departments only need the first group: a code and a name. The
+ * second group is for tables with more columns and fields.
+ */
 export type LookupConfig = {
   /** Heading above the table, e.g. "Jobs" */
   title: string;
@@ -23,13 +47,36 @@ export type LookupConfig = {
   /** Lower case, e.g. "jobs" */
   nounPlural: string;
   codeLabel: string; // "Job code"
-  nameLabel: string; // "Job description"
-  codeMax: number;
-  nameMax: number;
+  /** The name column and field of the default layout: "Job description" */
+  nameLabel?: string;
+  codeMax?: number;
+  nameMax?: number;
   /** Back end route, e.g. "/api/jobs" */
   endpoint: string;
   /** Rights are named <PREFIX>_ADD, <PREFIX>_EDIT and <PREFIX>_DELETE */
   rightsPrefix: string;
+
+  // ----- only for tables with more than a code and a name -----
+  /** Columns after the code. Default: one column with the name. */
+  columns?: LookupColumn[];
+  /** Form fields. Default: the code (typed when adding, read-only when editing) and the name. */
+  fields?: LookupFieldDef[];
+  /** The system assigns the code (employee numbers): GET <endpoint>/next-number, and no code field. */
+  autoCode?: boolean;
+  /** How a row is called in buttons and messages. Default: its name. */
+  rowLabel?: (row: LookupRow) => string;
+  /** Leave the code out of the delete message, for codes that are not meant to be read */
+  hideCodeInMessages?: boolean;
+  /** Last sentence of the delete message. Default: "A <noun> that still has job history cannot be deleted." */
+  deleteNote?: string;
+  /** Text of the add button. Default: "Add <noun>" */
+  addLabel?: string;
+  /** Show the search box. Default true. */
+  searchable?: boolean;
+  /** Show the heading above the table. Default true; false when the caller has its own heading. */
+  showTitle?: boolean;
+  /** Rows per page. Default 20. */
+  pageSize?: number;
 };
 
 type LookupPanelProps = {
@@ -38,14 +85,25 @@ type LookupPanelProps = {
   rights: string[];
   /** Given for the offline demo account: the in-memory store to use instead of the server */
   demo?: DemoStore;
+  /** Extra buttons at the start of each row's Actions cell (e.g. the History button of an employee) */
+  rowActions?: (row: LookupRow) => ReactNode;
 };
 
 type DialogState =
-  | { mode: "add" }
-  | { mode: "edit"; row: DemoLookupRow }
+  | { mode: "add"; code?: string } // code: the number the system will give (autoCode tables)
+  | { mode: "edit"; row: LookupRow }
   | null;
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
+
+// Written out in full so Tailwind can see the class names
+const hideBelowClass = {
+  md: "hidden md:table-cell",
+  lg: "hidden lg:table-cell",
+  xl: "hidden xl:table-cell",
+};
+// The Stamp column is long and for admins only: it is the first to go on small screens
+const STAMP_CELL = "hidden lg:table-cell";
 
 const actionButton =
   "rounded-md border border-light-grey bg-white px-3 py-1 text-sm transition-colors duration-200 ease-in-out hover:bg-light-grey disabled:opacity-60";
@@ -65,8 +123,36 @@ const saveMessage = (err: unknown) => {
   return errorMessage(err);
 };
 
-function LookupPanel({ config, rights, demo }: LookupPanelProps) {
-  const { title, noun, nounPlural, codeLabel, nameLabel, endpoint } = config;
+function LookupPanel({ config, rights, demo, rowActions }: LookupPanelProps) {
+  const { title, noun, nounPlural, codeLabel, endpoint, autoCode } = config;
+  const nameLabel = config.nameLabel ?? "Name";
+  const PAGE_SIZE = config.pageSize ?? DEFAULT_PAGE_SIZE;
+
+  // Jobs and departments: a name column, and a code + name form
+  const columns: LookupColumn[] = config.columns ?? [
+    { key: "name", label: nameLabel },
+  ];
+  const fields: LookupFieldDef[] = config.fields ?? [
+    {
+      key: "code",
+      label: codeLabel,
+      maxLength: config.codeMax,
+      uppercase: true,
+      lockedOnEdit: true,
+    },
+    { key: "name", label: nameLabel, maxLength: config.nameMax },
+  ];
+  const labelOf = (row: LookupRow) =>
+    config.rowLabel ? config.rowLabel(row) : String(row.name ?? row.code);
+  const hideClass = (col: LookupColumn) =>
+    col.hideBelow ? hideBelowClass[col.hideBelow] : "";
+  const cellOf = (row: LookupRow, col: LookupColumn): ReactNode => {
+    if (col.render) return col.render(row);
+    const value = row[col.key];
+    return value === undefined || value === null || value === ""
+      ? "—"
+      : String(value);
+  };
 
   // Both paths return a promise and throw the same ApiError, so the code below is the same for both.
   const run = <T,>(demoCall: () => T, live: () => Promise<T>): Promise<T> =>
@@ -88,9 +174,7 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
   const [actionError, setActionError] = useState<ErrorInfo | null>(null);
   const [listError, setListError] = useState<ErrorInfo | null>(null);
   // Confirm-delete state: the row waiting for a yes, and what the server said when asked
-  const [pendingDelete, setPendingDelete] = useState<DemoLookupRow | null>(
-    null,
-  );
+  const [pendingDelete, setPendingDelete] = useState<LookupRow | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<ErrorInfo | null>(null);
   const [busyCode, setBusyCode] = useState<string | null>(null); // row whose restore is running
@@ -144,7 +228,7 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
 
   // Delete asks first. The database refuses a delete while job history still points at the row;
   // the reason shows inside the confirm dialog, so it can be read before closing.
-  const askDelete = (row: DemoLookupRow) => {
+  const askDelete = (row: LookupRow) => {
     setDeleteError(null);
     setActionError(null);
     setPendingDelete(row);
@@ -158,7 +242,10 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
     try {
       await run(
         () => demo!.remove(row.code),
-        () => api(`${endpoint}/${row.code}`, { method: "DELETE" }),
+        () =>
+          api(`${endpoint}/${encodeURIComponent(row.code)}`, {
+            method: "DELETE",
+          }),
       );
       setPendingDelete(null);
       refreshAfterRowChange();
@@ -171,13 +258,16 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
   };
 
   // Restore needs no confirmation: it undoes a delete and nothing is lost
-  const restore = async (row: DemoLookupRow) => {
+  const restore = async (row: LookupRow) => {
     setBusyCode(row.code);
     setActionError(null);
     try {
       await run(
         () => demo!.restore(row.code),
-        () => api(`${endpoint}/${row.code}/restore`, { method: "PATCH" }),
+        () =>
+          api(`${endpoint}/${encodeURIComponent(row.code)}/restore`, {
+            method: "PATCH",
+          }),
       );
       refreshAfterRowChange();
     } catch (err) {
@@ -189,10 +279,25 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
   };
 
   // ---------- add and edit ----------
-  const openAdd = () => {
-    setDialogError("");
+  // Tables whose code the system assigns (employee numbers) ask for the next one first,
+  // so the dialog can show it
+  const openAdd = async () => {
     setActionError(null);
-    setDialog({ mode: "add" });
+    try {
+      const code = autoCode
+        ? await run(
+            () => demo!.nextCode!(),
+            () =>
+              api<{ ok: true; code: string }>(`${endpoint}/next-number`).then(
+                (res) => res.code,
+              ),
+          )
+        : undefined;
+      setDialogError("");
+      setDialog({ mode: "add", code });
+    } catch (err) {
+      setActionError(describeError(err));
+    }
   };
 
   const save = async (values: LookupDialogValues) => {
@@ -201,16 +306,19 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
     try {
       if (dialog.mode === "edit") {
         const { code } = dialog.row;
-        const body = { name: values.name }; // the code is the key and never changes
+        // The values hold the editable fields only: the code is the key and never changes
         await run(
-          () => demo!.update(code, body),
-          () => api(`${endpoint}/${code}`, { method: "PATCH", body }),
+          () => demo!.update(code, values),
+          () =>
+            api(`${endpoint}/${encodeURIComponent(code)}`, {
+              method: "PATCH",
+              body: values,
+            }),
         );
       } else {
-        const body = { code: values.code, name: values.name };
         await run(
-          () => demo!.create(body),
-          () => api(endpoint, { method: "POST", body }),
+          () => demo!.create(values),
+          () => api(endpoint, { method: "POST", body: values }),
         );
       }
       setDialog(null);
@@ -223,6 +331,23 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
     }
   };
 
+  // What the dialog shows: when editing, the fields that are locked move into the subtitle
+  const dialogFields =
+    dialog?.mode === "edit" ? fields.filter((f) => !f.lockedOnEdit) : fields;
+  const dialogSubtitle = (() => {
+    if (!dialog) return undefined;
+    if (dialog.mode === "add")
+      return autoCode && dialog.code
+        ? `${codeLabel} ${dialog.code}`
+        : undefined;
+    const { row } = dialog;
+    const parts = fields
+      .filter((f) => f.lockedOnEdit)
+      .map((f) => `${f.label} ${String(row[f.key] ?? "")}`);
+    if (autoCode) parts.unshift(`${codeLabel} ${row.code}`);
+    return parts.join(" · ") || undefined;
+  })();
+
   // Users with the Delete right can open the Inactive and All tabs and see Status and Stamp;
   // everyone else sees the Active rows only (same rule as Customers).
   const showTabs = canDelete;
@@ -230,8 +355,9 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
   const rows = data?.items ?? [];
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const hasActions = canEdit || canDelete;
-  const colCount = 2 + (canDelete ? 2 : 0) + (hasActions ? 1 : 0);
+  const hasActions = canEdit || canDelete || rowActions !== undefined;
+  const colCount =
+    1 + columns.length + (canDelete ? 2 : 0) + (hasActions ? 1 : 0);
   const loading = data === null && !listError;
   const loadFailed = listError !== null && data === null;
   const searching = query.trim() !== "";
@@ -256,7 +382,9 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
       {/*----------Toolbar: heading, status tabs, search, add----------*/}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <h2 className="text-2xl font-bold">{title}</h2>
+          {config.showTitle !== false && (
+            <h2 className="text-2xl font-bold">{title}</h2>
+          )}
           {showTabs && (
             <div
               role="tablist"
@@ -288,23 +416,25 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <i
-              className="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dark-grey"
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setPage(1);
-              }}
-              placeholder={`Search ${nounPlural}...`}
-              aria-label={`Search ${nounPlural}`}
-              className="w-64 rounded-full bg-[#e0d3ca] py-2 pl-9 pr-3 placeholder:text-dark-grey focus:outline-none focus:ring-2 focus:ring-fire-light"
-            />
-          </div>
+          {config.searchable !== false && (
+            <div className="relative w-full sm:w-auto">
+              <i
+                className="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dark-grey"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setPage(1);
+                }}
+                placeholder={`Search ${nounPlural}...`}
+                aria-label={`Search ${nounPlural}`}
+                className="w-full rounded-full bg-[#e0d3ca] sm:w-64 py-2 pl-9 pr-3 placeholder:text-dark-grey focus:outline-none focus:ring-2 focus:ring-fire-light"
+              />
+            </div>
+          )}
           {canAdd && (
             <button
               type="button"
@@ -312,7 +442,7 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
               className="flex items-center gap-2 rounded-md bg-fire px-4 py-2 text-white shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light"
             >
               <i className="fa-solid fa-plus" aria-hidden="true" />
-              Add {noun}
+              {config.addLabel ?? `Add ${noun}`}
             </button>
           )}
         </div>
@@ -320,22 +450,33 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
 
       {/*----------Table----------*/}
       <Card className="overflow-x-auto p-2">
-        <table className="w-full min-w-[40rem] text-left">
+        <table
+          className={`w-full text-left ${columns.length > 2 ? "lg:min-w-[64rem]" : "min-w-[40rem]"}`}
+        >
           <caption className="sr-only">{title}</caption>
           <thead className="text-sm text-dark-grey">
             <tr>
               <th scope="col" className="px-4 py-3 font-semibold">
                 {codeLabel}
               </th>
-              <th scope="col" className="px-4 py-3 font-semibold">
-                {nameLabel}
-              </th>
+              {columns.map((col) => (
+                <th
+                  key={col.key}
+                  scope="col"
+                  className={`px-4 py-3 font-semibold ${col.align === "right" ? "text-right" : ""} ${hideClass(col)}`}
+                >
+                  {col.label}
+                </th>
+              ))}
               {canDelete && (
                 <>
                   <th scope="col" className="px-4 py-3 font-semibold">
                     Status
                   </th>
-                  <th scope="col" className="px-4 py-3 font-semibold">
+                  <th
+                    scope="col"
+                    className={`px-4 py-3 font-semibold ${STAMP_CELL}`}
+                  >
                     Stamp
                   </th>
                 </>
@@ -442,7 +583,14 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
                   className={`border-t border-light-grey ${deleted ? "bg-cream" : ""}`}
                 >
                   <td className="px-4 py-3 font-semibold">{row.code}</td>
-                  <td className="px-4 py-3">{row.name}</td>
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className={`px-4 py-3 ${col.align === "right" ? "text-right" : ""} ${col.nowrap ? "whitespace-nowrap" : ""} ${hideClass(col)}`}
+                    >
+                      {cellOf(row, col)}
+                    </td>
+                  ))}
                   {canDelete && (
                     <>
                       <td className="px-4 py-3">
@@ -450,7 +598,9 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
                           {row.status}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-sm text-dark-grey">
+                      <td
+                        className={`px-4 py-3 text-sm text-dark-grey ${STAMP_CELL}`}
+                      >
                         {row.stamp}
                       </td>
                     </>
@@ -458,13 +608,14 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
                   {hasActions && (
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
+                        {rowActions?.(row)}
                         {deleted ? (
                           canDelete && (
                             <button
                               type="button"
                               onClick={() => restore(row)}
                               disabled={busyCode === row.code}
-                              aria-label={`Restore ${row.name}`}
+                              aria-label={`Restore ${labelOf(row)}`}
                               className={actionButton}
                             >
                               Restore
@@ -479,7 +630,7 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
                                   setDialogError("");
                                   setDialog({ mode: "edit", row });
                                 }}
-                                aria-label={`Edit ${row.name}`}
+                                aria-label={`Edit ${labelOf(row)}`}
                                 className={actionButton}
                               >
                                 Edit
@@ -489,7 +640,7 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
                               <button
                                 type="button"
                                 onClick={() => askDelete(row)}
-                                aria-label={`Delete ${row.name}`}
+                                aria-label={`Delete ${labelOf(row)}`}
                                 className={actionButton}
                               >
                                 Delete
@@ -543,14 +694,18 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
 
       {dialog && (
         <LookupDialog
-          noun={noun}
-          codeLabel={codeLabel}
-          nameLabel={nameLabel}
-          codeMax={config.codeMax}
-          nameMax={config.nameMax}
+          title={dialog.mode === "edit" ? `Edit ${noun}` : `Add ${noun}`}
+          subtitle={dialogSubtitle}
+          submitLabel={dialog.mode === "edit" ? "Save changes" : `Add ${noun}`}
+          fields={dialogFields}
           initial={
             dialog.mode === "edit"
-              ? { code: dialog.row.code, name: dialog.row.name }
+              ? Object.fromEntries(
+                  dialogFields.map((f) => [
+                    f.key,
+                    String(dialog.row[f.key] ?? ""),
+                  ]),
+                )
               : undefined
           }
           error={dialogError}
@@ -563,7 +718,7 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
       {/* Confirm-delete state: nothing is deleted until the person says yes */}
       {pendingDelete && (
         <ConfirmDialog
-          title={`Delete ${pendingDelete.name}?`}
+          title={`Delete ${labelOf(pendingDelete)}?`}
           confirmLabel={`Delete ${noun}`}
           busyLabel="Deleting..."
           busy={deleting}
@@ -572,12 +727,14 @@ function LookupPanel({ config, rights, demo }: LookupPanelProps) {
           onCancel={() => !deleting && setPendingDelete(null)}
         >
           <p>
-            <b>{pendingDelete.name}</b> ({pendingDelete.code}) will be marked
-            Inactive and hidden from the Active list.
+            <b>{labelOf(pendingDelete)}</b>
+            {config.hideCodeInMessages ? "" : ` (${pendingDelete.code})`} will
+            be marked Inactive and hidden from the Active list.
           </p>
           <p className="mt-2 text-sm text-dark-grey">
-            You can restore it later from the Inactive tab. A {noun} that still
-            has job history cannot be deleted.
+            You can restore it later from the Inactive tab.{" "}
+            {config.deleteNote ??
+              `A ${noun} that still has job history cannot be deleted.`}
           </p>
         </ConfirmDialog>
       )}

@@ -311,11 +311,8 @@ function CustomersPage() {
       </header>
 
       {isDemo && (
-        <p role="status" className="rounded-md bg-cream px-4 py-2">
-          You are using the demo account with sample customers. It is not
-          connected to the server, so your changes stay in this browser tab and
-          reset when you refresh. Log in with a real account to manage the real
-          customer list.
+        <p role="status" className="text-xs italic">
+          Demo
         </p>
       )}
       {/* Error state: each message says what failed and, where it helps, how to get out */}
