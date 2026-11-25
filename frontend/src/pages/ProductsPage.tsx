@@ -312,12 +312,8 @@ function ProductsPage() {
       {isDemo && (
         <div
           role="status"
-          className="flex flex-wrap items-center gap-3 rounded-md bg-cream px-4 py-2"
+          className="flex flex-wrap items-center gap-3 rounded-md bg-cream"
         >
-          <span>
-            You are using the demo account with sample products. Changes stay in
-            this browser tab and reset when you refresh. Preview as:
-          </span>
           <div role="group" aria-label="Preview as role" className="flex gap-2">
             {(["user", "admin", "superadmin"] as const).map((r) => (
               <button
@@ -335,6 +331,7 @@ function ProductsPage() {
               </button>
             ))}
           </div>
+          <p className="text-xs italic">Demo</p>
         </div>
       )}
       {/* Error state: each message says what failed and, where it helps, how to get out */}

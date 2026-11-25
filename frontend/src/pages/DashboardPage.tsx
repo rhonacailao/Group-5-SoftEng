@@ -134,12 +134,13 @@ function DashboardPage() {
         <h2 id="stats-heading" className="sr-only">
           Key statistics
         </h2>
-        <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <dl className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-6">
           {stats.map(({ label, value, note }) => (
-            <Card key={label} className="p-6 text-center">
+            <Card key={label} className="min-w-0 p-6 text-center">
               <dt className="text-xl font-semibold text-dark-grey">{label}</dt>
-              <dd className="mt-2">
-                <span className="block text-5xl font-bold leading-none">
+              {/* [container-type:inline-size] lets the number size itself from the card width (cqi) */}
+              <dd className="mt-2 [container-type:inline-size]">
+                <span className="block whitespace-nowrap text-[clamp(1.75rem,17cqi,3rem)] font-bold leading-none">
                   {value}
                 </span>
                 <span className="mt-2 block text-sm text-dark-grey">
@@ -156,18 +157,18 @@ function DashboardPage() {
         <h2 id="quick-actions-heading" className="mb-4 text-2xl font-bold">
           Quick actions
         </h2>
-        <ul className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-6">
           {quickActions.map(({ to, label, note, icon }) => (
             <li key={to}>
               <Card
                 as={Link}
                 to={to}
-                className="flex h-full items-center gap-4 p-6 transition-colors duration-200 ease-in-out hover:bg-white"
+                className="flex h-full min-w-0 items-center gap-4 p-6 transition-colors duration-200 ease-in-out hover:bg-white"
               >
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-fire text-2xl text-white">
                   <i className={`fa-solid ${icon}`} aria-hidden="true" />
                 </span>
-                <span className="flex-1">
+                <span className="min-w-0 flex-1">
                   <span className="block text-lg font-bold">{label}</span>
                   <span className="block text-sm text-dark-grey">{note}</span>
                 </span>

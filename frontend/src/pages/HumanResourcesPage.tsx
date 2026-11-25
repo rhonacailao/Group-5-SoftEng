@@ -87,11 +87,8 @@ function HumanResourcesPage() {
       </header>
 
       {isDemo && (
-        <p role="status" className="rounded-md bg-cream px-4 py-2">
-          You are using the demo account with sample jobs and departments. It is
-          not connected to the server, so your changes stay in this browser tab
-          and reset when you refresh. Log in with a real account to manage the
-          real lists.
+        <p role="status" className="text-xs italic">
+          Demo
         </p>
       )}
       {rightsError && (
