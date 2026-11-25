@@ -23,7 +23,6 @@ import {
   dangerButton,
   money,
   roleChip,
-  roleIntro,
   roleLabel,
   saveMessage,
   type ApiProduct,
@@ -52,7 +51,9 @@ import { useDismiss } from "../lib/useDismiss";
 // ===========================================================================
 
 type DialogState =
-  { mode: "add" } | { mode: "edit"; product: ApiProduct } | null;
+  | { mode: "add" }
+  | { mode: "edit"; product: ApiProduct }
+  | null;
 
 // Chips inside the filter dropdown (flat pills, like the inputs)
 const chip = (selected: boolean) =>
@@ -306,7 +307,6 @@ function ProductsPage() {
             {roleLabel[viewRole]}
           </span>
         </div>
-        <p className="mt-3 text-sm text-dark-grey">{roleIntro[viewRole]}</p>
       </header>
 
       {isDemo && (
