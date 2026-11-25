@@ -2,7 +2,8 @@ import { ApiError } from "./api";
 
 // Sample jobs and departments for the offline demo account (see authStore.ts). The demo has no
 // server session, so HumanResourcesPage reads and writes these in-memory lists instead of calling
-// /api/jobs and /api/departments.
+// /api/jobs and /api/departments. Employees and their job history are in demoEmployees.ts and
+// use the same DemoStore shape.
 //
 // The rows are the job and department tables of HopeDB_audit.sql, and `history` is how many rows
 // of the jobHistory table point at each one. Like the real database (trg_check_children), a job
@@ -17,6 +18,17 @@ export type DemoLookupRow = {
   stamp: string;
 };
 
+/**
+ * A row of any LookupPanel table. Jobs and departments only add `name`; employees add their
+ * own fields (lastName, hireDate...). `code` is the key used in the URL of the row.
+ */
+export type LookupRow = {
+  code: string;
+  status: "Active" | "Inactive";
+  stamp: string;
+  [field: string]: unknown;
+};
+
 export type LookupTab = "active" | "inactive" | "all";
 
 export type LookupListArgs = {
@@ -26,25 +38,28 @@ export type LookupListArgs = {
   pageSize: number;
 };
 
-/** Same answer shape as GET /api/jobs and GET /api/departments */
+/** Same answer shape as GET /api/jobs, GET /api/departments and GET /api/employees */
 export type LookupListResponse = {
   ok: true;
-  items: DemoLookupRow[];
+  items: LookupRow[];
   total: number;
   counts: Record<LookupTab, number>;
   page: number;
   pageSize: number;
 };
 
-export type LookupValues = { code: string; name: string };
+/** What the add / edit form sends: one text per form field, keyed like the field */
+export type LookupValues = Record<string, string>;
 
-/** What the page needs from either store, so it can run on jobs or departments. */
+/** What the panel needs from any store, so it can run on jobs, departments, employees... */
 export type DemoStore = {
   list: (args: LookupListArgs) => LookupListResponse;
-  create: (input: LookupValues) => DemoLookupRow;
-  update: (code: string, input: { name: string }) => DemoLookupRow;
-  remove: (code: string) => DemoLookupRow;
-  restore: (code: string) => DemoLookupRow;
+  create: (input: LookupValues) => LookupRow;
+  update: (code: string, input: LookupValues) => LookupRow;
+  remove: (code: string) => LookupRow;
+  restore: (code: string) => LookupRow;
+  /** Only for tables whose key is assigned by the system (employee numbers) */
+  nextCode?: () => string;
 };
 
 type StoreConfig = {
@@ -60,13 +75,14 @@ type StoreConfig = {
 
 /** The demo user is an admin, so it gets every right. Keys are the tile codes of GET /api/menu. */
 export const DEMO_HR_RIGHTS: Record<string, string[]> = {
+  EMPLOYEE: ["EMPLOYEE_ADD", "EMPLOYEE_EDIT", "EMPLOYEE_DELETE"],
   JOB: ["JOB_ADD", "JOB_EDIT", "JOB_DELETE"],
   DEPARTMENT: ["DEPARTMENT_ADD", "DEPARTMENT_EDIT", "DEPARTMENT_DELETE"],
 };
 
 const DEMO_USER = "demo";
 // The database labels the rows loaded by the script with "ADD system <load time>"
-const SEED_STAMP = "ADD system 2026-10-12 09:00 AM";
+export const SEED_STAMP = "ADD system 2026-10-12 09:00 AM";
 
 // Time in Asia/Manila, written like the database does: 2026-10-12 11:18 AM
 function nowText() {
@@ -86,8 +102,9 @@ function nowText() {
   return `${get("year")}-${get("month")}-${get("day")} ${hour12}:${get("minute")} ${ampm}`;
 }
 
-type StampAction = "ADD" | "EDIT" | "DELETE" | "RESTORE";
-const stamp = (action: StampAction) => `${action} ${DEMO_USER} ${nowText()}`;
+export type StampAction = "ADD" | "EDIT" | "DELETE" | "RESTORE";
+export const stamp = (action: StampAction) =>
+  `${action} ${DEMO_USER} ${nowText()}`;
 
 function createStore(
   config: StoreConfig,

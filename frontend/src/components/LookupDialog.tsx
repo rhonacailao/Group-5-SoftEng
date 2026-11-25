@@ -1,18 +1,32 @@
 import { useEffect, useRef, useState } from "react";
 import TextField from "./TextField";
 
-export type LookupDialogValues = {
-  code: string;
-  name: string;
+/** One input of the form. Jobs and departments have a code and a name; employees have more. */
+export type LookupField = {
+  /** Name of the value in the object sent to the server, e.g. "lastName" */
+  key: string;
+  label: string;
+  /** Default "text" */
+  type?: "text" | "date" | "select";
+  maxLength?: number;
+  /** Small help text under the input */
+  hint?: string;
+  /** For type "select" */
+  options?: { value: string; label: string }[];
+  /** Typed in capitals, for codes */
+  uppercase?: boolean;
 };
 
+export type LookupDialogValues = Record<string, string>;
+
 type LookupDialogProps = {
-  /** Lower case, e.g. "job" or "department" */
-  noun: string;
-  codeLabel: string;
-  nameLabel: string;
-  codeMax: number;
-  nameMax: number;
+  /** "Add job", "Edit employee"... */
+  title: string;
+  /** Under the title: the part that cannot be edited, e.g. "Job code PRES" */
+  subtitle?: string;
+  /** Text of the save button */
+  submitLabel: string;
+  fields: LookupField[];
   /** Existing values when editing; leave out when adding */
   initial?: LookupDialogValues;
   onSave: (values: LookupDialogValues) => void;
@@ -24,16 +38,16 @@ type LookupDialogProps = {
 };
 
 /**
- * Add or edit a job or a department. Both are just a code and a name. The code is the primary
- * key, so it is typed when adding and shown read-only when editing. Status and Stamp are filled
- * in by the system, so they are not here.
+ * Add or edit one row of a LookupPanel table. The panel decides which fields are shown: a key
+ * that is typed when adding (the job code) is left out when editing and shown in the subtitle
+ * instead, and a key the system assigns (the employee number) is never a field. Status and Stamp
+ * are filled in by the system, so they are not here.
  */
 function LookupDialog({
-  noun,
-  codeLabel,
-  nameLabel,
-  codeMax,
-  nameMax,
+  title,
+  subtitle,
+  submitLabel,
+  fields,
   initial,
   onSave,
   onClose,
@@ -41,15 +55,20 @@ function LookupDialog({
   busy = false,
 }: LookupDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
-  const [values, setValues] = useState<LookupDialogValues>(
-    initial ?? { code: "", name: "" },
+  const [values, setValues] = useState<LookupDialogValues>(() =>
+    Object.fromEntries(fields.map((f) => [f.key, initial?.[f.key] ?? ""])),
   );
-  const editing = initial !== undefined;
 
   useEffect(() => {
     const dialog = ref.current;
     if (dialog && !dialog.open) dialog.showModal();
   }, []);
+
+  const setValue = (field: LookupField, raw: string) =>
+    setValues((v) => ({
+      ...v,
+      [field.key]: field.uppercase ? raw.toUpperCase() : raw,
+    }));
 
   return (
     <dialog
@@ -61,45 +80,68 @@ function LookupDialog({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          onSave({
-            code: values.code.trim().toUpperCase(),
-            name: values.name.trim(),
-          });
+          onSave(
+            Object.fromEntries(
+              fields.map((f) => {
+                const value = (values[f.key] ?? "").trim();
+                return [f.key, f.uppercase ? value.toUpperCase() : value];
+              }),
+            ),
+          );
         }}
       >
         <header className="border-b border-light-grey p-6">
           <h2 id="lookup-title" className="text-2xl font-bold">
-            {editing ? `Edit ${noun}` : `Add ${noun}`}
+            {title}
           </h2>
-          {editing && (
-            <p className="mt-1 text-sm text-dark-grey">
-              {codeLabel} {initial.code}
-            </p>
+          {subtitle && (
+            <p className="mt-1 text-sm text-dark-grey">{subtitle}</p>
           )}
         </header>
 
         <div className="flex flex-col gap-4 p-6">
-          {!editing && (
-            <TextField
-              id="lookup-code"
-              label={codeLabel}
-              maxLength={codeMax}
-              value={values.code}
-              onChange={(e) =>
-                setValues((v) => ({
-                  ...v,
-                  code: e.target.value.toUpperCase(),
-                }))
-              }
-            />
-          )}
-          <TextField
-            id="lookup-name"
-            label={nameLabel}
-            maxLength={nameMax}
-            value={values.name}
-            onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))}
-          />
+          {fields.map((f) => {
+            const id = `lookup-${f.key}`;
+            const hint = f.hint && (
+              <p className="mt-1 text-xs text-dark-grey">{f.hint}</p>
+            );
+            if (f.type === "select") {
+              return (
+                <div key={f.key}>
+                  <label htmlFor={id} className="mb-1 block font-semibold">
+                    {f.label}
+                  </label>
+                  <select
+                    id={id}
+                    value={values[f.key] ?? ""}
+                    onChange={(e) => setValue(f, e.target.value)}
+                    className="w-full rounded-md bg-[#e0d3ca] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fire-light"
+                  >
+                    <option value="">Select...</option>
+                    {f.options?.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                  {hint}
+                </div>
+              );
+            }
+            return (
+              <div key={f.key}>
+                <TextField
+                  id={id}
+                  label={f.label}
+                  type={f.type === "date" ? "date" : undefined}
+                  maxLength={f.maxLength}
+                  value={values[f.key] ?? ""}
+                  onChange={(e) => setValue(f, e.target.value)}
+                />
+                {hint}
+              </div>
+            );
+          })}
         </div>
 
         {error && (
@@ -121,7 +163,7 @@ function LookupDialog({
             disabled={busy}
             className="rounded-md bg-fire px-4 py-2 text-white shadow-lg transition-colors duration-200 ease-in-out hover:bg-fire-light disabled:opacity-60"
           >
-            {editing ? "Save changes" : `Add ${noun}`}
+            {submitLabel}
           </button>
         </footer>
       </form>
