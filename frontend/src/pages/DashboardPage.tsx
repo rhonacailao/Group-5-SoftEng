@@ -15,17 +15,11 @@ type Deliverable = {
 };
 
 const stats = [
-  {
-    label: "Total customers",
-    value: "82",
-    icon: "fa-users",
-    note: "Registered accounts",
-  },
-  { label: "Products", value: "57", icon: "fa-box", note: "In the catalogue" },
+  { label: "Total customers", value: "82", note: "Registered accounts" },
+  { label: "Products", value: "57", note: "In the catalogue" },
   {
     label: "Open orders",
     value: "14",
-    icon: "fa-clipboard-list",
     note: "Awaiting delivery or payment",
   },
   {
@@ -35,7 +29,6 @@ const stats = [
       currency: "USD",
       maximumFractionDigits: 0,
     }).format(665326.58),
-    icon: "fa-dollar-sign",
     note: "Payments received",
   },
 ];
@@ -142,16 +135,9 @@ function DashboardPage() {
           Key statistics
         </h2>
         <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {stats.map(({ label, value, icon, note }) => (
-            <Card key={label} className="p-6">
-              <div className="flex items-center justify-between">
-                <dt className="text-xl font-semibold text-dark-grey">
-                  {label}
-                </dt>
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-cream text-2xl text-fire">
-                  <i className={`fa-solid ${icon}`} aria-hidden="true" />
-                </span>
-              </div>
+          {stats.map(({ label, value, note }) => (
+            <Card key={label} className="p-6 text-center">
+              <dt className="text-xl font-semibold text-dark-grey">{label}</dt>
               <dd className="mt-2">
                 <span className="block text-5xl font-bold leading-none">
                   {value}

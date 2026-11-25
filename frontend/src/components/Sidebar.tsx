@@ -4,16 +4,37 @@ import { isAdminOrAbove, isSuperadmin, type Role } from "../lib/roles";
 
 // Font Awesome icons (import the CDN in index.html)
 type NavItem = { to: string; label: string; icon: string };
+// A group of links. Groups with a label get a divider and a small heading above them.
+type NavSection = { id: string; label?: string; items: NavItem[] };
 
-const baseLinks: NavItem[] = [
-  { to: "/dashboard", label: "Dashboard", icon: "fa-gauge-high" },
-  { to: "/customers", label: "Customers", icon: "fa-users" },
-  { to: "/products", label: "Products", icon: "fa-box" },
-  { to: "/sales", label: "Sales", icon: "fa-cart-shopping" },
-];
+const dashboardLink: NavItem = {
+  to: "/dashboard",
+  label: "Dashboard",
+  icon: "fa-gauge-high",
+};
+
+const customersLink: NavItem = {
+  to: "/customers",
+  label: "Customers",
+  icon: "fa-users",
+};
+const productsLink: NavItem = {
+  to: "/products",
+  label: "Products",
+  icon: "fa-box",
+};
+const hrLink: NavItem = {
+  to: "/human-resources",
+  label: "Human Resources",
+  icon: "fa-id-badge",
+};
+const salesLink: NavItem = {
+  to: "/sales",
+  label: "Sales",
+  icon: "fa-cart-shopping",
+};
 
 const adminLinks: NavItem[] = [
-  { to: "/human-resources", label: "Human Resources", icon: "fa-id-badge" },
   { to: "/user-management", label: "User Management", icon: "fa-user-shield" },
 ];
 
@@ -21,12 +42,37 @@ const superadminLinks: NavItem[] = [
   { to: "/system-settings", label: "System Settings", icon: "fa-sliders" },
 ];
 
-/** User: base modules. Admin: + HR and User Management. Superadmin: + System Settings. */
-function linksFor(role?: Role): NavItem[] {
-  return [
-    ...baseLinks,
-    ...(isAdminOrAbove(role) ? adminLinks : []),
+/**
+ * Dashboard on its own, then "Modules", then "Administration".
+ * User: Customers, Products, Sales. Admin: + Human Resources, and the Administration group
+ * (User Management). Superadmin: + System Settings in Administration.
+ */
+function sectionsFor(role?: Role): NavSection[] {
+  const admin = isAdminOrAbove(role);
+  const modules = [
+    customersLink,
+    productsLink,
+    ...(admin ? [hrLink] : []),
+    salesLink,
+  ];
+  const administration = [
+    ...(admin ? adminLinks : []),
     ...(isSuperadmin(role) ? superadminLinks : []),
+  ];
+
+  return [
+    { id: "main", items: [dashboardLink] },
+    { id: "modules", label: "Modules", items: modules },
+    // Only people who can administer see this group at all
+    ...(administration.length > 0
+      ? [
+          {
+            id: "administration",
+            label: "Administration",
+            items: administration,
+          },
+        ]
+      : []),
   ];
 }
 
@@ -58,17 +104,42 @@ function Sidebar() {
         </Link>
       </div>
 
-      <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-4">
-        <ul className="flex flex-col gap-2">
-          {linksFor(role).map(({ to, label, icon }) => (
-            <li key={to}>
-              <NavLink to={to} className={linkClass}>
-                <i className={`fa-solid ${icon} fa-fw`} aria-hidden="true" />
+      <nav
+        aria-label="Main navigation"
+        className="flex flex-1 flex-col gap-4 overflow-y-auto px-4"
+      >
+        {sectionsFor(role).map(({ id, label, items }) => (
+          <div
+            key={id}
+            // The divider and heading sit above every group except the first
+            className={label ? "border-t border-dark-grey pt-4" : undefined}
+          >
+            {label && (
+              <h2
+                id={`nav-${id}`}
+                className="mb-2 px-4 text-sm font-semibold text-white/60"
+              >
                 {label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+              </h2>
+            )}
+            <ul
+              aria-labelledby={label ? `nav-${id}` : undefined}
+              className="flex flex-col gap-2"
+            >
+              {items.map(({ to, label: itemLabel, icon }) => (
+                <li key={to}>
+                  <NavLink to={to} className={linkClass}>
+                    <i
+                      className={`fa-solid ${icon} fa-fw`}
+                      aria-hidden="true"
+                    />
+                    {itemLabel}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </nav>
 
       <footer className="flex flex-col gap-2 border-t border-dark-grey p-4">
