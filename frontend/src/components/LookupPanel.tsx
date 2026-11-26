@@ -25,6 +25,8 @@ export type LookupColumn = {
   align?: "right";
   /** Keep a date or a number on one line */
   nowrap?: boolean;
+  /** Tailwind width class (e.g. "w-[7rem]"). Only used with config.fitWidth, where columns have fixed widths. */
+  width?: string;
   /** Hide this column on screens narrower than this (Tailwind breakpoint), so the table fits a phone */
   hideBelow?: "md" | "lg" | "xl";
   /** Custom cell, for values that need formatting. Empty values show as a dash. */
@@ -77,6 +79,8 @@ export type LookupConfig = {
   showTitle?: boolean;
   /** Rows per page. Default 20. */
   pageSize?: number;
+  /** Let the table shrink to its container (e.g. inside a dialog) instead of keeping a minimum width and scrolling sideways. */
+  fitWidth?: boolean;
 };
 
 type LookupPanelProps = {
@@ -127,6 +131,7 @@ function LookupPanel({ config, rights, demo, rowActions }: LookupPanelProps) {
   const { title, noun, nounPlural, codeLabel, endpoint, autoCode } = config;
   const nameLabel = config.nameLabel ?? "Name";
   const PAGE_SIZE = config.pageSize ?? DEFAULT_PAGE_SIZE;
+  const fit = config.fitWidth === true;
 
   // Jobs and departments: a name column, and a code + name form
   const columns: LookupColumn[] = config.columns ?? [
@@ -451,38 +456,53 @@ function LookupPanel({ config, rights, demo, rowActions }: LookupPanelProps) {
       {/*----------Table----------*/}
       <Card className="overflow-x-auto p-2">
         <table
-          className={`w-full text-left ${columns.length > 2 ? "lg:min-w-[64rem]" : "min-w-[40rem]"}`}
+          className={`w-full text-left ${
+            config.fitWidth
+              ? "table-fixed [&_td]:px-3 [&_th]:px-3 [&_td:first-child]:whitespace-nowrap" // fixed layout: same column widths with or without rows
+              : columns.length > 2
+                ? "lg:min-w-[64rem]"
+                : "min-w-[40rem]"
+          }`}
         >
           <caption className="sr-only">{title}</caption>
           <thead className="text-sm text-dark-grey">
             <tr>
-              <th scope="col" className="px-4 py-3 font-semibold">
+              <th
+                scope="col"
+                className={`px-4 py-3 font-semibold ${fit ? "w-[9rem]" : ""}`}
+              >
                 {codeLabel}
               </th>
               {columns.map((col) => (
                 <th
                   key={col.key}
                   scope="col"
-                  className={`px-4 py-3 font-semibold ${col.align === "right" ? "text-right" : ""} ${hideClass(col)}`}
+                  className={`px-4 py-3 font-semibold ${col.align === "right" ? "text-right" : ""} ${fit ? (col.width ?? "") : ""} ${hideClass(col)}`}
                 >
                   {col.label}
                 </th>
               ))}
               {canDelete && (
                 <>
-                  <th scope="col" className="px-4 py-3 font-semibold">
+                  <th
+                    scope="col"
+                    className={`px-4 py-3 font-semibold ${fit ? "w-[5.5rem]" : ""}`}
+                  >
                     Status
                   </th>
                   <th
                     scope="col"
-                    className={`px-4 py-3 font-semibold ${STAMP_CELL}`}
+                    className={`px-4 py-3 font-semibold ${fit ? "w-[7rem]" : ""} ${STAMP_CELL}`}
                   >
                     Stamp
                   </th>
                 </>
               )}
               {hasActions && (
-                <th scope="col" className="px-4 py-3 font-semibold">
+                <th
+                  scope="col"
+                  className={`px-4 py-3 font-semibold ${fit ? "w-[5.5rem]" : ""}`}
+                >
                   Actions
                 </th>
               )}

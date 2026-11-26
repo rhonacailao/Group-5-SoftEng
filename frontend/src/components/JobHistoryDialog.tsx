@@ -78,7 +78,7 @@ function JobHistoryDialog({ employee, rights, isDemo, onClose }: Props) {
     endpoint: `/api/employees/${empNo}/job-history`,
     rightsPrefix: "EMPLOYEE",
     columns: [
-      { key: "effDate", label: "Eff date", nowrap: true },
+      { key: "effDate", label: "Eff date", nowrap: true, width: "w-[6.5rem]" },
       {
         key: "jobCode",
         label: "Job",
@@ -95,6 +95,7 @@ function JobHistoryDialog({ employee, rights, isDemo, onClose }: Props) {
         label: "Salary",
         align: "right",
         nowrap: true,
+        width: "w-[6.5rem]",
         render: (r) => money(Number(r.salary)),
       },
     ],
@@ -126,6 +127,7 @@ function JobHistoryDialog({ employee, rights, isDemo, onClose }: Props) {
     addLabel: "Add History",
     searchable: false,
     showTitle: false,
+    fitWidth: true,
     pageSize: 50,
   };
 
@@ -134,7 +136,7 @@ function JobHistoryDialog({ employee, rights, isDemo, onClose }: Props) {
       ref={ref}
       onClose={onClose}
       aria-labelledby="job-history-title"
-      className="m-auto w-full max-w-4xl rounded-xl bg-white p-0 text-dark shadow-lg backdrop:bg-dark/60"
+      className="m-auto w-full max-w-5xl rounded-xl bg-white p-0 text-dark shadow-lg backdrop:bg-dark/60"
     >
       <header className="flex items-start justify-between gap-4 border-b border-light-grey p-4 sm:p-6">
         <div>
