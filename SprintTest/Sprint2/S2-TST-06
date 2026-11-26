@@ -1,0 +1,63 @@
+S2-TST-06
+Task Name: Bug logging, triage, and fix verification
+Assigned Team Member: Ian Carlo Balajadia
+Sprint / Week: Sprint 2 / Week 4
+Objective: Log, investigate, prioritize, and verify bug reports across all implemented features and user interfaces during Sprint 2, ensuring identified defects have clear reproduction steps, expected behaviors, and thorough verification before closure.
+
+BUG-S2-01 / TC-S2-TST-06-A: User Cannot Access/View Products and Customers
+Severity / Priority: High / P1
+Environment: Sprint 2 Integration Build (Frontend UI + Backend RBAC Middleware)
+
+Steps to Reproduce:
+-Log in using a standard approved user account (status = 'Active', is_blocked = false).
+-Attempt to navigate to the Customers and Products modules from the dashboard or sidebar.
+-Observe access denial / missing module visibility even when the user should be granted read access.
+
+Expected Behavior: Users granted Customer and Product view permissions can view the Customers and Products directories without error, while ungranted users receive a clear permission denial
+Root Cause & Triage Notes: Directly coupled with BUG-S2-02—because the Superadmin could not persist rights assignments in User Management, standard user accounts remained without public.user_permission entries for Customer and Product modules.
+Fix Verification (TC-S2-TST-06-A): After applying the User Management rights fix (BUG-S2-02) and assigning Customer/Product view rights, logged in as the standard user and confirmed both the Customers and Products lists load cleanly with zero regressions.
+
+Status: PASS / Verified Fixed✅
+
+BUG-S2-02 / TC-S2-TST-06-B: User Management Not Functioning Properly (Superadmin Could Not Give Rights to User)
+Severity / Priority: Critical / P1
+Environment: Sprint 2 Integration Build (User Management & Rights Dialog)
+
+Steps to Reproduce:
+-Log in as the Superadmin account (public.app_user joined to public.role).
+-Open User Management, select an active user account, and open the Rights / Permissions assignment dialog.
+-Toggle module/action rights (Customer, Product, Price History) and click Save.
+
+Expected Behavior: Superadmin can open the Rights dialog for any user, grant or revoke individual rights, and persist those selections cleanly in public.user_permission.
+Root Cause & Triage Notes: Superadmin role authorization / rights update endpoint failed to commit permission changes to public.user_permission.
+Fix Verification (TC-S2-TST-06-B): Logged in as Superadmin, assigned granular Customer, Product, and Price rights to a test user, confirmed rows updated in public.user_permission, and verified the changes immediately took effect upon user login.
+
+Status: PASS / Verified Fixed ✅
+
+BUG-S2-03 / TC-S2-TST-06-C: Edit Button Issue on Action Management
+Severity / Priority: Medium / P2
+Environment: Sprint 2 Integration Build (Action / Rights Management UI)
+
+
+Steps to Reproduce:
+-Log in as an authorized administrator and navigate to Action Management.
+-Locate an existing action/permission entry and click its Edit button.
+-Observe that the Edit button does not trigger the edit form/modal or fails to load the selected record's values.
+
+Expected Behavior: Clicking the Edit button on Action Management opens the edit modal/form pre-populated with the selected record's attributes and saves updates properly.
+Fix Verification (TC-S2-TST-06-C): Re-tested the Action Management table after the UI event-handler fix; confirmed clicking Edit opens the edit dialog cleanly, saves modifications, and refreshes the table without regressions.
+
+Status: PASS / Verified Fixed ✅
+
+BUG-S2-04 / TC-S2-TST-06-D: Sales Module Not Yet Implemented (Scope Triage)
+Severity / Priority: Informational / Out of Sprint 2 Scope
+Environment: Sprint 2 Integration Build (Main Navigation / Dashboard)
+
+Observation / Steps:
+-Log in to the application and inspect the Sales navigation link / tile.
+-Observe that the Sales module is not yet implemented.
+Expected Behavior & Triage Disposition: Per the Sprint Plan, Sprint 2 covers Customer, Product, and Price History modules, while Sales (sales and salesdetail) is scheduled for Sprint 3. Logged for documentation completeness and confirmed not to be a Sprint 2 defect or blocker.
+Status: Triaged — Deferred to Sprint 3 (Not a Sprint 2 Bug) 📋
+
+
+
