@@ -38,6 +38,9 @@ Migration files are stored in:
 
 supabase/migrations/
 
+Job history records enforce one effective date per employee. The database rejects
+inserts or updates that would create a duplicate employee/effective-date pair.
+
 Create a new migration using:
 
 npx.cmd supabase migration new migration_name
