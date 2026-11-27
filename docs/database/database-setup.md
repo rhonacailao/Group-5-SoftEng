@@ -38,6 +38,13 @@ Migration files are stored in:
 
 supabase/migrations/
 
+Job history records enforce one effective date per employee. The database rejects
+inserts or updates that would create a duplicate employee/effective-date pair.
+
+Application users can optionally link to one employee through `app_user.empno`.
+The database rejects nonexistent employee IDs and prevents an employee from being
+linked to multiple accounts. Unlinked accounts are allowed.
+
 Create a new migration using:
 
 npx.cmd supabase migration new migration_name
